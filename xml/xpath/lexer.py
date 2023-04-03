@@ -7,6 +7,7 @@ from enum import IntEnum
 from .._tokenize import *
 
 #** Variables **#
+__all__ = ['XToken', 'EToken', 'XLexer', 'ELexer']
 
 SLASH       = ord('/')
 WILDCARD    = ord('*')
@@ -118,8 +119,8 @@ class XLexer(BaseLexer):
         return Result(token, bytes(value))
 
 class ELexer(BaseLexer):
-    """XPath Filter Lexer"""
-    
+    """XPath Logic and Function Expression Lexer"""
+   
     def read_word(self, value: bytearray):
         return super().read_word(value, SPECIAL)
 
@@ -191,6 +192,7 @@ class ELexer(BaseLexer):
                     token = EToken.LTE if token == EToken.LT else EToken.GTE
                 else:
                     self.unread(char)
+                self.skip_spaces()
                 break
             # process function
             if char == OPEN_PAREN:
