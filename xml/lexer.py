@@ -6,29 +6,31 @@ from typing import Optional
 
 from ._tokenize import *
 
-#** Variables **#
+# ** Variables **#
 __all__ = ['Token', 'Lexer']
 
-OPEN_TAG  = ord('<')
-CLOSE_TAG = ord('>') 
-EQUALS    = ord('=')
-BANG      = ord('!')
-DASH      = ord('-')
-QUESTION  = ord('?')
+OPEN_TAG = ord('<')
+CLOSE_TAG = ord('>')
+EQUALS = ord('=')
+BANG = ord('!')
+DASH = ord('-')
+QUESTION = ord('?')
 
 SPECIAL = b'=<>'
 
-#** Classes **#
+
+# ** Classes **#
 
 class Token(IntEnum):
-    TAG_START   = 1
-    TAG_END     = 2
-    ATTR_NAME   = 3
-    ATTR_VALUE  = 5
-    TEXT        = 6
-    COMMENT     = 7
+    TAG_START = 1
+    TAG_END = 2
+    ATTR_NAME = 3
+    ATTR_VALUE = 5
+    TEXT = 6
+    COMMENT = 7
     DECLARATION = 8
     INSTRUCTION = 9
+
 
 class Lexer(BaseLexer):
     """
@@ -45,7 +47,7 @@ class Lexer(BaseLexer):
             except StopIteration:
                 return
         return self.buffer.pop(0)
-    
+
     def guess_token(self, char: int, value: bytearray) -> int:
         """
         guess the token-type based on a single character
@@ -65,8 +67,8 @@ class Lexer(BaseLexer):
             value.append(char)
             return Token.ATTR_NAME
         return 0
- 
-    def read_word(self, value: bytearray):
+
+    def read_word(self, value: bytearray, terminate: bytes = b''):
         """
         read buffer until a space is found or special terminators
         """
@@ -99,7 +101,7 @@ class Lexer(BaseLexer):
                 continue
             if char == CLOSE_TAG:
                 break
-            if buffer: 
+            if buffer:
                 value.extend(buffer)
                 buffer.clear()
             value.append(char)
@@ -158,7 +160,7 @@ class Lexer(BaseLexer):
                     token = Token.INSTRUCTION
                     continue
             if token in (Token.DECLARATION, Token.COMMENT) \
-                and char == DASH and not value:
+                    and char == DASH and not value:
                 token = Token.COMMENT
                 continue
             # break if new token starts/ends

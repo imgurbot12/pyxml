@@ -5,32 +5,33 @@ from typing import Dict, List, Type, Optional
 
 from .etree import *
 
-#** Variables **#
+# ** Variables **#
 __all__ = ['TreeBuilder']
 
-#** Classes **#
+
+# ** Classes **#
 
 class TreeBuilder:
     """Simple XML Tree Building Implementation"""
 
     def __init__(self,
-        root:             Optional[Element] = None,
-        element_factory:  Type[Element]     = Element,
-        comment_factory:  Type[Element]     = Comment,
-        pi_factory:       Type[Element]     = ProcessingInstruction,
-        include_comments: bool              = False,
-        include_pi:       bool              = False,
-    ):
-        self.element_factory  = element_factory
-        self.comment_factory  = comment_factory
-        self.pi_factory       = pi_factory
+                 root: Optional[Element] = None,
+                 element_factory: Type[Element] = Element,
+                 comment_factory: Type[Element] = Comment,
+                 pi_factory: Type[Element] = ProcessingInstruction,
+                 include_comments: bool = False,
+                 include_pi: bool = False,
+                 ):
+        self.element_factory = element_factory
+        self.comment_factory = comment_factory
+        self.pi_factory = pi_factory
         self.include_comments = include_comments
-        self.include_pi       = include_pi
-        self.root:    Optional[Element] = root
-        self.text:    List[bytes]       = []
-        self.tree:    List[Element]     = []
-        self.last:    Optional[Element] = None
-        self.tail:    bool              = False
+        self.include_pi = include_pi
+        self.root: Optional[Element] = root
+        self.text: List[bytes] = []
+        self.tree: List[Element] = []
+        self.last: Optional[Element] = None
+        self.tail: bool = False
 
     def _flush(self):
         """flush collected text to right position in tree"""
@@ -49,7 +50,7 @@ class TreeBuilder:
                 raise RuntimeError('Element text already assigned')
             self.last.text = text
         self.text = []
- 
+
     def _append(self, elem: Element):
         """append new element to the tree"""
         self.last = elem

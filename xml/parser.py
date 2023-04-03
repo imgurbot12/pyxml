@@ -6,14 +6,15 @@ from typing import List, Dict
 from .lexer import DataStream, Token, Lexer
 from .builder import TreeBuilder
 
-#** Variables **#
+# ** Variables **#
 __all__ = ['Parser']
 
-SLASH     = b'/'
-COLON     = b':'
+SLASH = b'/'
+COLON = b':'
 NS_PREFIX = b'xmlns'
 
-#** Classes **#
+
+# ** Classes **#
 
 class Parser:
     """
@@ -25,9 +26,9 @@ class Parser:
         :param stream:  datastream of xml bytes to parse
         :param builder: builder factory used to build xml-tree
         """
-        self.lexer   = Lexer(stream)
+        self.lexer = Lexer(stream)
         self.builder = builder
- 
+
     def parse_tag(self, tag: bytes):
         """
         iterate tokens from the lexer until single tag entry has been parsed
@@ -59,7 +60,7 @@ class Parser:
                 continue
             raise RuntimeError('Unexpected Tag Token', result)
         # finalize processing for starting tag
-        attributes.update({k:b'true' for k in incomplete})
+        attributes.update({k: b'true' for k in incomplete})
         self.builder.start(tag, attributes)
 
     def next(self) -> bool:

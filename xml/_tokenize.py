@@ -3,23 +3,25 @@ BaseClass Tokenizer Implementation for various Lexers
 """
 from typing import NamedTuple, Optional, Iterator, Generator
 
-#** Variables **#
+# ** Variables **#
 __all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']
 
 #: bytearray containing valid space characters
-SPACES  = b'\n\r\t '
+SPACES = b'\n\r\t '
 
 #: bytearray containing valid quote characters
-QUOTES  = b'"\''
+QUOTES = b'"\''
 
 #: typehint for data stream of single bytes
 DataStream = Iterator[int]
 
-#** Classes **#
+
+# ** Classes **#
 
 class Result(NamedTuple):
     token: int
     value: bytes
+
 
 class BaseLexer:
     """
@@ -27,10 +29,10 @@ class BaseLexer:
     """
 
     def __init__(self, stream: DataStream):
-        self.stream     = stream
-        self.buffer     = bytearray()
+        self.stream = stream
+        self.buffer = bytearray()
         self.last_token = 0
- 
+
     def read_byte(self) -> int | None:
         """
         read next byte from array
@@ -47,7 +49,7 @@ class BaseLexer:
         unread bytes from the data-stream
         """
         self.buffer.extend(data)
-    
+
     def skip_spaces(self):
         """
         skip and ignore all whitespace until next text-block
@@ -59,7 +61,7 @@ class BaseLexer:
             if char not in SPACES:
                 self.unread(char)
                 break
-    
+
     def read_word(self, value: bytearray, terminate: bytes = b''):
         """
         read buffer until a space is found or special terminators
@@ -89,7 +91,7 @@ class BaseLexer:
             # track escapes to know if quote is escaped or not
             escapes = (escapes + 1) if char == escapes else 0
             value.append(char)
-    
+
     def _next(self) -> Result:
         raise NotImplementedError
 
@@ -114,4 +116,3 @@ class BaseLexer:
             if result is None:
                 break
             yield result
-
