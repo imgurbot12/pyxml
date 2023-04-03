@@ -4,27 +4,30 @@ XML Elements and ElementTree Implementation
 from typing import Dict, List, Optional, Iterator, Any
 from typing_extensions import Self
 
-#** Variables **#
+# ** Variables **#
 __all__ = [
-    'Element', 
-    'Comment', 
+    'Element',
+    'Comment',
     'ProcessingInstruction',
 ]
 
-#** Functions **#
 
-#** Classes **#
+# ** Functions **#
+
+# ** Classes **#
 
 class Element:
     """XML Element Object Definition"""
- 
-    def __init__(self, tag: bytes, attrib: Dict[bytes, bytes] = {}, **extra):
-        self.tag    = tag
+
+    def __init__(self, tag: bytes, attrib=None, **extra):
+        if attrib is None:
+            attrib = {}
+        self.tag = tag
         self.attrib = {**attrib, **extra}
         self.children: List[Self] = []
-        self.text:     Optional[bytes] = None
-        self.tail:     Optional[bytes] = None
-    
+        self.text: Optional[bytes] = None
+        self.tail: Optional[bytes] = None
+
     def __repr__(self) -> str:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
 
@@ -33,7 +36,7 @@ class Element:
 
     def __getitem__(self, index: int) -> Self:
         return self.children[index]
-    
+
     def __setitem__(self, index: int, element: Self):
         self.children[index] = element
 
@@ -42,7 +45,7 @@ class Element:
 
     def append(self, element: Self):
         self.children.append(element)
-    
+
     def extend(self, elements: Iterator[Self]):
         self.children.extend(elements)
 
@@ -67,6 +70,7 @@ class Element:
     def items(self):
         return self.attrib.items()
 
+
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
 
@@ -74,8 +78,10 @@ class _Special(Element):
         super().__init__(self.__class__.__name__.encode())
         self.text = text
 
+
 class Comment(_Special):
     pass
+
 
 class ProcessingInstruction(_Special):
     pass

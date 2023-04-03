@@ -6,57 +6,60 @@ from enum import IntEnum
 
 from .._tokenize import *
 
-#** Variables **#
+# ** Variables **#
 __all__ = ['XToken', 'EToken', 'XLexer', 'ELexer']
 
-SLASH       = ord('/')
-WILDCARD    = ord('*')
-OPEN_BRACK  = ord('[')
+SLASH = ord('/')
+WILDCARD = ord('*')
+OPEN_BRACK = ord('[')
 CLOSE_BRACK = ord(']')
-OPEN_PAREN  = ord('(')
+OPEN_PAREN = ord('(')
 CLOSE_PAREN = ord(')')
-ATSYM       = ord('@')
-COMMA       = ord(',')
-EQUALS      = ord('=')
-LESSTHAN    = ord('<')
+ATSYM = ord('@')
+COMMA = ord(',')
+EQUALS = ord('=')
+LESSTHAN = ord('<')
 GREATERTHAN = ord('>')
 
 AND = b'and'
-OR  = b'or'
+OR = b'or'
 
 SPECIAL = b'*[]()/<>,=.'
-FUNC    = b'()'
+FUNC = b'()'
 
 DIGIT = string.digits.encode()
-WORD  = string.ascii_letters.encode() + DIGIT + b'_'
+WORD = string.ascii_letters.encode() + DIGIT + b'_'
 
-#** Classes **#
+
+# ** Classes **#
 
 class XToken(IntEnum):
     """XPath Tokens"""
-    CHILD     = 1
+    CHILD = 1
     DECENDANT = 2
-    NODE      = 3
-    WILDCARD  = 4
-    FILTER    = 5
-    FUNCTION  = 6
+    NODE = 3
+    WILDCARD = 4
+    FILTER = 5
+    FUNCTION = 6
+
 
 class EToken(IntEnum):
     """XPath Expression Tokens"""
-    OPERATOR    = 0
-    STRING      = 1
-    INTEGER     = 2
-    VARIABLE    = 3
-    COMMA       = 4
-    EXPRESSION  = 5
-    EQUALS      = 6
-    FUNCTION    = 7
-    LT          = 8
-    GT          = 9
-    LTE         = 10
-    GTE         = 11
-    AND         = 12
-    OR          = 13
+    OPERATOR = 0
+    STRING = 1
+    INTEGER = 2
+    VARIABLE = 3
+    COMMA = 4
+    EXPRESSION = 5
+    EQUALS = 6
+    FUNCTION = 7
+    LT = 8
+    GT = 9
+    LTE = 10
+    GTE = 11
+    AND = 12
+    OR = 13
+
 
 class XLexer(BaseLexer):
     """XPath Path Lexer"""
@@ -76,7 +79,7 @@ class XLexer(BaseLexer):
                 self.read_quote(char, value)
                 continue
             value.append(char)
- 
+
     def _next(self) -> Result:
         """parse basic xpath syntax (avoiding filter content)"""
         token = 0
@@ -118,10 +121,11 @@ class XLexer(BaseLexer):
             token = XToken.FUNCTION
         return Result(token, bytes(value))
 
+
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""
-   
-    def read_word(self, value: bytearray):
+
+    def read_word(self, value: bytearray, terminate: bytes = b''):
         return super().read_word(value, SPECIAL)
 
     def read_expression(self, value: bytearray):
@@ -149,7 +153,7 @@ class ELexer(BaseLexer):
         guess token type based on single character
         """
         if char == ATSYM:
-            self.read_word(value) 
+            self.read_word(value)
             return EToken.VARIABLE
         if char == COMMA:
             return EToken.COMMA
