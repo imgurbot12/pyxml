@@ -1,57 +1,36 @@
 """
 XML Tree Builder Implementation
 """
-from typing import Dict, List, Iterator, Type, Optional
-from typing_extensions import Self
+from typing import Dict, List, Type, Optional
+
+from .etree import *
 
 #** Variables **#
+__all__ = ['TreeBuilder']
 
 #** Classes **#
-
-class Element:
-    """XML Element Object Definition"""
- 
-    def __init__(self, tag: bytes, attrib: Dict[bytes, bytes] = {}, **extra):
-        self.tag    = tag
-        self.attrib = {**attrib, **extra}
-        self.children: List[Self] = []
-        self.text:     Optional[bytes] = None
-        self.tail:     Optional[bytes] = None
-    
-    def __repr__(self) -> str:
-        return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
-
-    def __len__(self) -> int:
-        return len(self.children)
-
-    def __getitem__(self, index: int) -> Self:
-        return self.children[index]
-    
-    def __setitem__(self, index: int, element: Self):
-        self.children[index] = element
-
-    def insert(self, index: int, element: Self):
-        self.children.insert(index, element)
-
-    def append(self, element: Self):
-        self.children.append(element)
-    
-    def extend(self, elements: Iterator[Self]):
-        self.children.extend(elements)
-
-    def remove(self, element: Self):
-        self.children.remove(element)
 
 class TreeBuilder:
     """Simple XML Tree Building Implementation"""
 
-    def __init__(self):
+    def __init__(self,
+        root:             Optional[Element] = None,
+        element_factory:  Type[Element]     = Element,
+        comment_factory:  Type[Element]     = Comment,
+        pi_factory:       Type[Element]     = ProcessingInstruction,
+        include_comments: bool              = False,
+        include_pi:       bool              = False,
+    ):
+        self.element_factory  = element_factory
+        self.comment_factory  = comment_factory
+        self.pi_factory       = pi_factory
+        self.include_comments = include_comments
+        self.include_pi       = include_pi
+        self.root:    Optional[Element] = root
         self.text:    List[bytes]       = []
         self.tree:    List[Element]     = []
-        self.root:    Optional[Element] = None
         self.last:    Optional[Element] = None
         self.tail:    bool              = False
-        self.factory: Type[Element]     = Element
 
     def _flush(self):
         """flush collected text to right position in tree"""
@@ -70,18 +49,29 @@ class TreeBuilder:
                 raise RuntimeError('Element text already assigned')
             self.last.text = text
         self.text = []
-
-    def start(self, tag: bytes, attrs: Dict[bytes, bytes]):
-        """process start of a new tag and update tree"""
-        self._flush()
-        elem = self.factory(tag, attrs)
+ 
+    def _append(self, elem: Element):
+        """append new element to the tree"""
+        self.last = elem
         if self.tree:
             self.tree[-1].append(elem)
         elif self.root is None:
             self.root = elem
-        self.last = elem
-        self.tail = False
+
+    def _inline(self, factory: Type[Element], *args):
+        """generate single inline element and append it to the tree"""
+        self._flush()
+        elem = factory(*args)
+        self._append(elem)
+        self.tail = True
+
+    def start(self, tag: bytes, attrs: Dict[bytes, bytes]):
+        """process start of a new tag and update tree"""
+        self._flush()
+        elem = self.element_factory(tag, attrs)
+        self._append(elem)
         self.tree.append(elem)
+        self.tail = False
 
     def end(self, tag: bytes):
         """process end of an existing tag and update tree"""
@@ -97,10 +87,14 @@ class TreeBuilder:
         self.text.append(data)
 
     def comment(self, comment: bytes):
-        pass
+        """generate and include comment (if enabled)"""
+        if self.include_comments:
+            self._inline(self.comment_factory, comment)
 
     def declaration(self, declaration: bytes):
         pass
 
     def handle_pi(self, pi: bytes):
-        pass
+        """generate and include processing instruction (if enabled)"""
+        if self.include_pi:
+            self._inline(self.pi_factory, pi)

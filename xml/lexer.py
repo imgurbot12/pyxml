@@ -2,10 +2,12 @@
 Xml Parser Lexer/Tokenizer
 """
 from enum import IntEnum
-from typing import NamedTuple, Iterator
+from typing import Optional
+
+from ._tokenize import *
 
 #** Variables **#
-__all__ = ['DataStream', 'Result', 'Token', 'Lexer']
+__all__ = ['Token', 'Lexer']
 
 OPEN_TAG  = ord('<')
 CLOSE_TAG = ord('>') 
@@ -14,19 +16,9 @@ BANG      = ord('!')
 DASH      = ord('-')
 QUESTION  = ord('?')
 
-SPACES  = b'\n\r\t '
 SPECIAL = b'=<>'
-QUOTES  = b'"\''
-
-#: typehint for data stream of single bytes
-DataStream = Iterator[int]
 
 #** Classes **#
-
-# @tuple #type: ignore
-class Result(NamedTuple):
-    token: int
-    value: bytes
 
 class Token(IntEnum):
     TAG_START   = 1
@@ -38,16 +30,11 @@ class Token(IntEnum):
     DECLARATION = 8
     INSTRUCTION = 9
 
-class Lexer:
+class Lexer(BaseLexer):
     """
     Simple XML Lexer/Tokenizer
     """
 
-    def __init__(self, stream: DataStream):
-        self.stream     = stream
-        self.buffer     = bytearray()
-        self.last_token = 0
-    
     def read_byte(self) -> int | None:
         """
         read next byte from array
@@ -78,31 +65,12 @@ class Lexer:
             value.append(char)
             return Token.ATTR_NAME
         return 0
-    
-    def skip_spaces(self):
-        """
-        skip and ignore all whitespace until next text-block
-        """
-        while True:
-            char = self.read_byte()
-            if char is None:
-                break
-            if char not in SPACES:
-                self.buffer.append(char)
-                break
-    
+ 
     def read_word(self, value: bytearray):
         """
-        read buffer until a space is found
+        read buffer until a space is found or special terminators
         """
-        while True:
-            char = self.read_byte()
-            if char is None or char in SPACES:
-                break
-            if char in SPECIAL:
-                self.buffer.append(char)
-                break
-            value.append(char)
+        return super().read_word(value, SPECIAL)
 
     def read_text(self, value: bytearray):
         """
@@ -113,27 +81,10 @@ class Lexer:
             if char is None:
                 break
             if char in (OPEN_TAG, CLOSE_TAG):
-                self.buffer.append(char)
+                self.unread(char)
                 break
             value.append(char)
 
-    def read_quote(self, quote: int, value: bytearray):
-        """
-        read quoted value
-        """
-        escapes = 0
-        while True:
-            char = self.read_byte()
-            if char is None:
-                break
-            # check if quote is escaped
-            if char == quote:
-                if escapes % 2 == 0:
-                    break
-            # track escapes to know if quote is escaped or not
-            escapes = (escapes + 1) if char == escapes else 0
-            value.append(char)
-    
     def read_comment(self, value: bytearray):
         """
         read until end of comment tag
@@ -181,7 +132,7 @@ class Lexer:
             value.append(char)
         raise ValueError('instruction never terminated')
 
-    def next(self) -> Result | None:
+    def _next(self) -> Optional[Result]:
         """
         parse the next token from the raw incoming data
         """
@@ -212,7 +163,7 @@ class Lexer:
                 continue
             # break if new token starts/ends
             if char in (OPEN_TAG, CLOSE_TAG):
-                self.buffer.append(char)
+                self.unread(char)
                 break
             # append buffered character if not a quote
             if char not in QUOTES:
@@ -241,9 +192,4 @@ class Lexer:
                 self.read_instruction(value)
                 break
             raise ValueError('invalid character?', token, chr(char))
-        # skip return if nothing was collected and data is empty
-        if token == 0 and not value:
-            return
-        # track last token and return token result
-        self.last_token = token
         return Result(token, bytes(value))
