@@ -8,6 +8,7 @@ from typing_extensions import Self
 __all__ = [
     'Element',
     'Comment',
+    'Declaration',
     'ProcessingInstruction',
 
     'ElementTree',
@@ -126,6 +127,9 @@ class _Special(Element):
         return
 
 class Comment(_Special):
+    pass
+
+class Declaration(_Special):
     pass
 
 class ProcessingInstruction(_Special):

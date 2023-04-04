@@ -5,32 +5,35 @@ from typing import Dict, List, Optional
 
 from .etree import *
 
-# ** Variables **#
+#** Variables **#
 __all__ = ['TreeBuilder']
 
-
-# ** Classes **#
+#** Classes **#
 
 class TreeBuilder:
     """Simple XML Tree Building Implementation"""
 
     def __init__(self,
-                 root: Optional[Element] = None,
-                 element_factory = Element,
-                 comment_factory = Comment,
-                 pi_factory = ProcessingInstruction,
-                 include_comments: bool = False,
-                 include_pi: bool = False,
-                 ):
+        root: Optional[Element] = None,
+        element_factory = Element,
+        comment_factory = Comment,
+        declare_factory = Declaration,
+        pi_factory = ProcessingInstruction,
+        include_comments: bool = False,
+        include_declare: bool = False,
+        include_pi: bool = False,
+    ):
         self.element_factory = element_factory
         self.comment_factory = comment_factory
+        self.declare_factory = declare_factory
         self.pi_factory = pi_factory
         self.include_comments = include_comments
+        self.include_declare = include_declare
         self.include_pi = include_pi
         self.root: Optional[Element] = root
+        self.last: Optional[Element] = root
+        self.tree: List[Element] = [] if root is None else [root]
         self.text: List[bytes] = []
-        self.tree: List[Element] = []
-        self.last: Optional[Element] = None
         self.tail: bool = False
 
     def _flush(self):
@@ -93,7 +96,9 @@ class TreeBuilder:
             self._inline(self.comment_factory, comment)
 
     def declaration(self, declaration: bytes):
-        pass
+        """generate and include declarations (if enabled)"""
+        if self.root is not None and self.include_declare:
+            self._inline(self.declare_factory, declaration)
 
     def handle_pi(self, pi: bytes):
         """generate and include processing instruction (if enabled)"""
