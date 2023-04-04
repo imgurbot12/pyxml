@@ -49,11 +49,10 @@ def findtext(elem: Element,  xpath: bytes, default=None) -> Optional[bytes]:
     :param xpath: raw xpath expression
     :return:      text from first element found matching criteria
     """
-    try:
-        match = find_xpath(xpath, (e for e in (elem, ))) 
-        if match and match.text is not None:
-            return match.text
-        return b''
-    except StopIteration:
+    match = find_xpath(xpath, (e for e in (elem, ))) 
+    if match is None:
         return default
+    if not match.text:
+        return b''
+    return match.text
 

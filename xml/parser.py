@@ -44,23 +44,30 @@ class Parser:
             self.builder.end(tag)
             return
         # process attributes on start-tag
+        closed:    bool = False
         incomplete: List[bytes] = []
         attributes: Dict[bytes, bytes] = {}
         while True:
             result = self.lexer.next()
             if result is None or result.token == Token.TAG_END:
                 break
+            # handle self-closed tags
+            elif result.token == Token.TAG_CLOSE:
+                closed = True
+                break
             # handle attribute tags
-            if result.token == Token.ATTR_NAME:
+            elif result.token == Token.ATTR_NAME:
                 incomplete.append(result.value)
                 continue
-            if result.token == Token.ATTR_VALUE:
+            elif result.token == Token.ATTR_VALUE:
                 attributes[incomplete.pop()] = result.value
                 continue
             raise RuntimeError('Unexpected Tag Token', result)
         # finalize processing for starting tag
         attributes.update({k: b'true' for k in incomplete})
         self.builder.start(tag, attributes)
+        if closed:
+            self.builder.end(tag)
 
     def next(self) -> bool:
         """
@@ -82,3 +89,10 @@ class Parser:
         else:
             raise RuntimeError('Unexpected Next Token', result)
         return True
+
+    def parse(self):
+        """parse content until content is empty"""
+        while self.next():
+            pass
+        return self.builder.root
+

@@ -1,7 +1,6 @@
 """
 XPATH Processing Engine
 """
-from itertools import chain
 from typing import Iterator, List, Optional, Tuple
 
 from .lexer import XToken, XLexer, EToken, ELexer
@@ -10,7 +9,7 @@ from ..etree import Element
 from .._tokenize import Result
 
 #** Variables **#
-__all__ = []
+__all__ = ['iter_xpath', 'find_xpath', 'list_xpath']
 
 #: type hint for list of argument getters
 Args = List[ArgGetter]
@@ -69,9 +68,7 @@ def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     return (args, action, compiled)
 
 def compile_expr_args(expr: bytes) -> Args:
-    """
-    compile a partial filter expression only to collect arguments
-    """
+    """compile a partial filter expression only to collect arguments"""
     args, action, _ = compile_expr(expr)
     if action:
         raise ValueError('invalid arguments', action, args)
@@ -120,7 +117,10 @@ def find_xpath(xpath: bytes, elements: Iterator[Element]) -> Optional[Element]:
     :param elements: elements to search for xpath components
     :return:         first element found matching criteria
     """
-    return next(iter_xpath(xpath, elements))
+    try:
+        return next(iter_xpath(xpath, elements))
+    except StopIteration:
+        return
 
 def list_xpath(xpath: bytes, elements: List[Element]) -> List[Element]:
     """

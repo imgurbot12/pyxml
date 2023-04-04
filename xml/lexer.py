@@ -9,25 +9,27 @@ from ._tokenize import *
 #** Variables **#
 __all__ = ['Token', 'Lexer']
 
-OPEN_TAG = ord('<')
+OPEN_TAG  = ord('<')
 CLOSE_TAG = ord('>')
-EQUALS = ord('=')
-BANG = ord('!')
-DASH = ord('-')
-QUESTION = ord('?')
+EQUALS    = ord('=')
+BANG      = ord('!')
+DASH      = ord('-')
+QUESTION  = ord('?')
+SLASH     = ord('/')
 
-SPECIAL    = b'=<>'
+SPECIAL    = b'=<>/'
 ONLY_SLASH = b'/'
 
 #** Classes **#
 
 class Token(IntEnum):
-    TAG_START = 1
-    TAG_END = 2
-    ATTR_NAME = 3
-    ATTR_VALUE = 5
-    TEXT = 6
-    COMMENT = 7
+    TAG_START   = 1
+    TAG_END     = 2
+    TAG_CLOSE   = 3
+    ATTR_NAME   = 4
+    ATTR_VALUE  = 5
+    TEXT        = 6
+    COMMENT     = 7
     DECLARATION = 8
     INSTRUCTION = 9
 
@@ -55,10 +57,16 @@ class Lexer(BaseLexer):
         if char == OPEN_TAG:
             self.skip_spaces()
             return Token.TAG_START
-        if char == CLOSE_TAG:
+        elif char == SLASH:
+            self.skip_spaces()
+            next_byte = self.read_byte()
+            if next_byte == CLOSE_TAG:
+                return Token.TAG_CLOSE
+            self.unread(next_byte)
+        elif char == CLOSE_TAG:
             self.skip_spaces()
             return Token.TAG_END
-        if char == EQUALS:
+        elif char == EQUALS:
             self.skip_spaces()
             return Token.ATTR_VALUE
         # append value to context-aware tag types
@@ -167,7 +175,7 @@ class Lexer(BaseLexer):
             # iterate until token-type can be determined
             if token == 0:
                 token = self.guess_token(char, value)
-                if token == Token.TAG_END:
+                if token in (Token.TAG_END, Token.TAG_CLOSE):
                     break
                 continue
             # handle multi-character token asssessments

@@ -1,7 +1,7 @@
 """
 XML Elements and ElementTree Implementation
 """
-from typing import List, Optional, Iterator, Any
+from typing import List, Optional, Iterator, Any, BinaryIO
 from typing_extensions import Self
 
 #** Variables **#
@@ -9,9 +9,19 @@ __all__ = [
     'Element',
     'Comment',
     'ProcessingInstruction',
+
+    'ElementTree',
 ]
 
 #** Functions **#
+
+def stream_file(f: BinaryIO, chunk_size: int = 8192) -> Iterator[int]:
+    """stream bytes of file one at a time"""
+    while True:
+        chunk = f.read(chunk_size)
+        if not chunk:
+            break
+        yield from chunk
 
 #** Classes **#
 
@@ -93,17 +103,17 @@ class Element:
         for child in self.children:
             yield from child.itertext()
 
-    def find(self, xpath: bytes) -> Optional[Self]:
-        return xpathlib.find(self, xpath)
+    def find(self, path: bytes) -> Optional[Self]:
+        return xpathlib.find(self, path)
 
-    def findall(self, xpath: bytes) -> List[Self]:
-        return xpathlib.findall(self, xpath)
+    def findall(self, path: bytes) -> List[Self]:
+        return xpathlib.findall(self, path)
 
-    def finditer(self, xpath: bytes) -> Iterator[Self]:
-        return xpathlib.iterfind(self, xpath)
+    def finditer(self, path: bytes) -> Iterator[Self]:
+        return xpathlib.iterfind(self, path)
 
-    def findtext(self, xpath: bytes, default=None) -> Optional[bytes]:
-        return xpathlib.findtext(self, xpath, default)
+    def findtext(self, path: bytes, default=None) -> Optional[bytes]:
+        return xpathlib.findtext(self, path, default)
 
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
@@ -121,5 +131,41 @@ class Comment(_Special):
 class ProcessingInstruction(_Special):
     pass
 
+class ElementTree:
+
+    def __init__(self, element=None, source=None):
+        self.root: Optional[Element] = element
+        if source:
+            self.parse(source)
+
+    def getroot(self) -> Element:
+        if self.root is None:
+            raise ValueError('No XML Root Element')
+        return self.root
+
+    def parse(self, source: BinaryIO, parser: Optional['Parser'] = None):
+        parser    = parser or Parser(stream_file(source), TreeBuilder())
+        self.root = parser.parse()
+
+    def iter(self, tag=None):
+        return self.getroot().iter(tag)
+
+    def find(self, path: bytes):
+        return self.getroot().find(path)
+
+    def findall(self, path: bytes):
+        return self.getroot().findall(path)
+    
+    def finditer(self, path: bytes):
+        return self.getroot().finditer(path)
+
+    def findtext(self, path: bytes):
+        return self.getroot().findtext(path)
+
+    def write(self):
+        pass
+
 #** Init **#
 from . import xpath as xpathlib
+from .builder import TreeBuilder
+from .parser import Parser

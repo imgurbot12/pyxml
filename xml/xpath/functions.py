@@ -98,7 +98,6 @@ def get_value(arg: ArgValue) -> Union[bool, int, bytes]:
 
 def compare_eq(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """basic equal comparison"""
-    print('eq', one.value, two.value)
     return one.value == two.value
 
 def compare_or(_: Element, one: ArgValue, two: ArgValue) -> bool:
