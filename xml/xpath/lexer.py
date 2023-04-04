@@ -77,8 +77,8 @@ class XLexer(BaseLexer):
                 break
             # skip quotes
             if char in QUOTES:
+                value.append(char)
                 self.read_quote(char, value)
-                continue
             value.append(char)
 
     def _next(self) -> Result:

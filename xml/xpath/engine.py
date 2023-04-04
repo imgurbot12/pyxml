@@ -10,6 +10,10 @@ from ..etree import Element
 from .._tokenize import Result
 
 #** Variables **#
+__all__ = []
+
+#: type hint for list of argument getters
+Args = List[ArgGetter]
 
 #** Functions **#
 
@@ -29,105 +33,101 @@ def filter_tag(elements: Iterator[Element], tag: bytes) -> Iterator[Element]:
         if elem.tag == tag:
             yield elem
 
-#** Classes **#
-
-class ExprEngine:
-
-    def __init__(self, expr: bytes):
-        self.lexer = ELexer(stream(expr))
- 
-    def next(self) -> Tuple[List[ArgGetter], Optional[Result], EvalExpr]:
-        """
-        parse expression and evaluate true/false
-        """
-        args: List[ArgGetter] = []
-        action: Optional[Result] = None
-        compiled: EvalExpr = lambda _: False
-        while True:
-            # retrieve next action in expression
-            result = self.lexer.next()
-            if result is None:
-                break
-            # handle according to token
-            token, value = result
-            if token >= EToken.EQUALS:
-                action = result
-                continue
-            elif token <= EToken.VARIABLE:
-                arg = compile_argument(result)
-                args.append(arg)
-            elif token == EToken.EXPRESSION:
-                expr_args = ExprEngine(value).args()
-                args.extend(expr_args)
-            elif token == EToken.COMMA:
-                pass
-            else:
-                raise ValueError('unsupported action?', result)
-            # process action when specified
-            if action:
-                # compile expression function and reset args/action state
-                compiled = compile_action(action, args)
-                args     = [wrap_expr(action, compiled)]
-                action   = None
-        # ensure no args are left hanging
-        return (args, action, compiled)
-    
-    def args(self) -> List[ArgGetter]:
-        """compile expression into a series of arguments"""
-        args, action, _ = self.next()
+def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
+    """compile a valid xpath filter expression"""
+    lexer = ELexer(stream(expr))
+    args: Args = []
+    action: Optional[Result] = None
+    compiled: EvalExpr = lambda _: False
+    while True:
+        # retrieve next action in expression
+        result = lexer.next()
+        if result is None:
+            break
+        # handle according to token
+        token, value = result
+        if token >= EToken.EQUALS:
+            action = result
+            continue
+        elif token <= EToken.VARIABLE:
+            arg = compile_argument(result)
+            args.append(arg)
+        elif token == EToken.EXPRESSION:
+            expr_args = compile_expr_args(value)
+            args.extend(expr_args)
+        elif token == EToken.COMMA:
+            pass
+        else:
+            raise ValueError('unsupported action?', result)
+        # process action when specified
         if action:
-            raise ValueError('invalid arguments', action, args)
-        return args 
+            # compile expression function and reset args/action state
+            compiled = compile_action(action, args)
+            args     = [wrap_expr(action, compiled)]
+            action   = None
+    # ensure no args are left hanging
+    return (args, action, compiled)
 
-    def parse(self) -> EvalExpr:
-        """compile expression given"""
-        args, action, compiled = self.next()
-        if action and args:
-            raise ValueError('incomplete expression', action, args)
-        return compiled
+def compile_expr_args(expr: bytes) -> Args:
+    """
+    compile a partial filter expression only to collect arguments
+    """
+    args, action, _ = compile_expr(expr)
+    if action:
+        raise ValueError('invalid arguments', action, args)
+    return args 
 
-class XpathEngine:
+def compile_expr_func(expr: bytes) -> EvalExpr:
+    """compile a complete filter expression into a single function"""
+    args, action, compiled = compile_expr(expr)
+    if action and args:
+        raise ValueError('incomplete expression', action, args)
+    return compiled
 
-    def __init__(self, xpath: bytes, elements: Iterator[Element]):
-        self.lexer    = XLexer(stream(xpath))
-        self.elements = elements
+def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
+    """
+    iterate parse and evaluate xpath to find and filter elements
 
-    def next(self) -> bool:
-        """
-        parse next section of xpath and search/filter specified elements
-        """
-        # retrieve how to process upcoming node
-        action = self.lexer.next()
-        if action is None:
-            return False
+    :param xpath:    raw xpath expression
+    :param elements: elements to search for xpath components
+    :return:         iterator of elements matching xpath criteria
+    """
+    lexer = XLexer(stream(xpath))
+    for action in lexer.iter():
         # process action according to token-type
         token, value = action
         if token == XToken.CHILD:
-            print('get children')
-            generators = [children(e) for e in self.elements]
+            elems = (c for e in elements for c in children(e))
         elif token == XToken.DECENDANT:
-            print('get decendants')
-            generators = [e.iter() for e in self.elements]
+            elems = (c for e in elements for c in e.iter())
         elif token == XToken.NODE:
-            print('filter', value)
-            generators = [filter_tag(self.elements, value)]
+            elems = (e for e in filter_tag(elements, value))
         elif token == XToken.WILDCARD:
-            print('wildcard', value)
-            return True
+            continue
         elif token == XToken.FILTER:
-            print('filter', value)
-            pass
+            expr  = compile_expr_func(value)
+            elems = (e for e in elements if expr(e))
         else:
             raise ValueError('unsupported token', action)
-        self.elements = [e for gen in generators for e in gen]
-        return True
+        elements = elems 
+    return elements
 
-    def parse(self) -> Iterator[Element]:
-        """
-        parse the specified xpath and return the finalized elements
-        """
-        while self.next():
-            print([e.tag for e in self.elements])
-            pass
-        return self.elements
+def find_xpath(xpath: bytes, elements: Iterator[Element]) -> Optional[Element]:
+    """
+    find first matching element associated w/ xpath
 
+    :param xpath:    raw xpath expression
+    :param elements: elements to search for xpath components
+    :return:         first element found matching criteria
+    """
+    return next(iter_xpath(xpath, elements))
+
+def list_xpath(xpath: bytes, elements: List[Element]) -> List[Element]:
+    """
+    list parse and evaluate xpath to find and filter elements
+
+    :param xpath:    raw xpath expression
+    :param elements: elements to search for xpath components
+    :return:         list of elements matching xpath criteria
+    """
+    return list(iter_xpath(xpath, (e for e in elements)))

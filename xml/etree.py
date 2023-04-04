@@ -79,12 +79,31 @@ class Element:
     def items(self):
         return self.attrib.items()
 
-    def iter(self) -> Iterator[Self]:
+    def iter(self, tag: Optional[bytes] = None) -> Iterator[Self]:
         """iterate all children recursively from parent"""
-        children = [*self.children]
-        for child in children:
-            yield child
-            children.extend(child.children)
+        if tag is None or tag == self.tag:
+            yield self
+        for child in self.children:
+            yield from child.iter(tag)
+   
+    def itertext(self):
+        """iterate all elements with text in them and retreieve values"""
+        if self.text:
+            yield self.text
+        for child in self.children:
+            yield from child.itertext()
+
+    def find(self, xpath: bytes) -> Optional[Self]:
+        return xpathlib.find(self, xpath)
+
+    def findall(self, xpath: bytes) -> List[Self]:
+        return xpathlib.findall(self, xpath)
+
+    def finditer(self, xpath: bytes) -> Iterator[Self]:
+        return xpathlib.iterfind(self, xpath)
+
+    def findtext(self, xpath: bytes, default=None) -> Optional[bytes]:
+        return xpathlib.findtext(self, xpath, default)
 
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
@@ -93,8 +112,14 @@ class _Special(Element):
         super().__init__(self.__class__.__name__.encode())
         self.text = text
 
+    def itertext(self):
+        return
+
 class Comment(_Special):
     pass
 
 class ProcessingInstruction(_Special):
     pass
+
+#** Init **#
+from . import xpath as xpathlib

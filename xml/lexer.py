@@ -16,7 +16,8 @@ BANG = ord('!')
 DASH = ord('-')
 QUESTION = ord('?')
 
-SPECIAL = b'=<>'
+SPECIAL    = b'=<>'
+ONLY_SLASH = b'/'
 
 #** Classes **#
 
@@ -52,10 +53,13 @@ class Lexer(BaseLexer):
         """
         # assume tag by a single character
         if char == OPEN_TAG:
+            self.skip_spaces()
             return Token.TAG_START
         if char == CLOSE_TAG:
+            self.skip_spaces()
             return Token.TAG_END
         if char == EQUALS:
+            self.skip_spaces()
             return Token.ATTR_VALUE
         # append value to context-aware tag types
         if self.last_token in (0, Token.TAG_END):
@@ -71,6 +75,23 @@ class Lexer(BaseLexer):
         read buffer until a space is found or special terminators
         """
         return super().read_word(value, terminate or SPECIAL)
+
+    def read_tag(self, value: bytearray):
+        """
+        read buffer until a tag name is found
+        """
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            if char in SPACES:
+                if value and value != ONLY_SLASH:
+                    break
+                continue
+            if char in SPECIAL:
+                self.unread(char)
+                break
+            value.append(char)
 
     def read_text(self, value: bytearray):
         """
@@ -166,10 +187,13 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             # append buffered character if not a quote
-            if char not in QUOTES:
+            if char not in QUOTES and char not in SPACES:
                 value.append(char)
             # handle tag types separately
-            if token in (Token.TAG_START, Token.ATTR_NAME):
+            if token == Token.TAG_START:
+                self.read_tag(value)
+                break
+            if token == Token.ATTR_NAME:
                 self.read_word(value)
                 break
             if token == Token.ATTR_VALUE:

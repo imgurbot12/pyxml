@@ -98,6 +98,7 @@ def get_value(arg: ArgValue) -> Union[bool, int, bytes]:
 
 def compare_eq(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """basic equal comparison"""
+    print('eq', one.value, two.value)
     return one.value == two.value
 
 def compare_or(_: Element, one: ArgValue, two: ArgValue) -> bool:
@@ -130,7 +131,11 @@ def name(e: Element) -> bytes:
 
 def text(e: Element) -> bytes:
     """XPATH `text` function implementation"""
-    return e.text or b''
+    text = bytearray(e.text or b'')
+    for child in e.children:
+        if child.tail:
+            text += b' ' + child.tail
+    return bytes(text)
 
 def contains(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """XPATH `contains` function implentation"""
@@ -161,6 +166,7 @@ BUILTIN = {
     EToken.GTE:    compare_gte,
 }
 
+#: map of XPATH supported functions assigned by name
 FUNCTIONS = {
     b'name':     name,
     b'text':     text,
