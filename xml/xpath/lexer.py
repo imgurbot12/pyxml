@@ -6,7 +6,7 @@ from enum import IntEnum
 
 from .._tokenize import *
 
-# ** Variables **#
+#** Variables **#
 __all__ = ['XToken', 'EToken', 'XLexer', 'ELexer']
 
 SLASH = ord('/')
@@ -21,17 +21,20 @@ EQUALS = ord('=')
 LESSTHAN = ord('<')
 GREATERTHAN = ord('>')
 
-AND = b'and'
-OR = b'or'
+AND   = b'and'
+OR    = b'or'
+TRUE  = b'true'
+FALSE = b'false'
 
-SPECIAL = b'*[]()/<>,=.'
+XSPECIAL = b'*[]/'
+ESPECIAL = b'*[]()/<>,=.'
+
 FUNC = b'()'
 
 DIGIT = string.digits.encode()
 WORD = string.ascii_letters.encode() + DIGIT + b'_'
 
-
-# ** Classes **#
+#** Classes **#
 
 class XToken(IntEnum):
     """XPath Tokens"""
@@ -45,21 +48,20 @@ class XToken(IntEnum):
 
 class EToken(IntEnum):
     """XPath Expression Tokens"""
-    OPERATOR = 0
-    STRING = 1
-    INTEGER = 2
-    VARIABLE = 3
-    COMMA = 4
-    EXPRESSION = 5
-    EQUALS = 6
-    FUNCTION = 7
-    LT = 8
-    GT = 9
-    LTE = 10
-    GTE = 11
-    AND = 12
-    OR = 13
-
+    BOOLEAN = 1
+    STRING = 2
+    INTEGER = 3
+    VARIABLE = 4
+    COMMA = 5
+    EXPRESSION = 6
+    EQUALS = 7
+    FUNCTION = 8
+    LT = 9
+    GT = 10
+    LTE = 11
+    GTE = 12
+    AND = 13
+    OR = 14
 
 class XLexer(BaseLexer):
     """XPath Path Lexer"""
@@ -69,13 +71,12 @@ class XLexer(BaseLexer):
         read contents of filter until complete
         """
         while True:
+            # break if empty or end of bracket
             char = self.read_byte()
-            if char is None:
+            if char is None or char == CLOSE_BRACK:
                 break
-            # skip quotes and wait until the end of the bracket
-            if char == CLOSE_BRACK:
-                break
-            elif char in QUOTES:
+            # skip quotes
+            if char in QUOTES:
                 self.read_quote(char, value)
                 continue
             value.append(char)
@@ -104,7 +105,7 @@ class XLexer(BaseLexer):
                 else:
                     token = XToken.NODE
                     value.append(char)
-                    self.read_word(value, SPECIAL)
+                    self.read_word(value, XSPECIAL)
                     break
                 continue
             # handle parsing according to guessed token-type
@@ -121,12 +122,11 @@ class XLexer(BaseLexer):
             token = XToken.FUNCTION
         return Result(token, bytes(value))
 
-
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""
 
     def read_word(self, value: bytearray, terminate: bytes = b''):
-        return super().read_word(value, SPECIAL)
+        return super().read_word(value, terminate or ESPECIAL)
 
     def read_expression(self, value: bytearray):
         """
@@ -138,8 +138,8 @@ class ELexer(BaseLexer):
             if char is None:
                 break
             elif char in QUOTES:
+                value.append(char)
                 self.read_quote(char, value)
-                continue
             elif char == OPEN_PAREN:
                 parens += 1
             elif char == CLOSE_PAREN:
@@ -174,7 +174,7 @@ class ELexer(BaseLexer):
             self.read_quote(char, value)
             return EToken.STRING
         value.append(char)
-        return EToken.OPERATOR
+        return 0
 
     def _next(self) -> Result:
         token = 0
@@ -204,4 +204,14 @@ class ELexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
+        # convert operator to valid token
+        if not token:
+            if value == AND:
+                token = EToken.AND
+            elif value == OR:
+                token = EToken.OR
+            elif value == TRUE:
+                token = EToken.BOOLEAN
+            elif value == FALSE:
+                token = EToken.BOOLEAN
         return Result(token, bytes(value))

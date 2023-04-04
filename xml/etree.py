@@ -1,20 +1,19 @@
 """
 XML Elements and ElementTree Implementation
 """
-from typing import Dict, List, Optional, Iterator, Any
+from typing import List, Optional, Iterator, Any
 from typing_extensions import Self
 
-# ** Variables **#
+#** Variables **#
 __all__ = [
     'Element',
     'Comment',
     'ProcessingInstruction',
 ]
 
+#** Functions **#
 
-# ** Functions **#
-
-# ** Classes **#
+#** Classes **#
 
 class Element:
     """XML Element Object Definition"""
@@ -24,12 +23,16 @@ class Element:
             attrib = {}
         self.tag = tag
         self.attrib = {**attrib, **extra}
+        self.parent:   Optional[Element] = None
         self.children: List[Self] = []
         self.text: Optional[bytes] = None
         self.tail: Optional[bytes] = None
 
     def __repr__(self) -> str:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
+    
+    def __iter__(self) -> Iterator[Self]:
+        return (child for child in self.children)
 
     def __len__(self) -> int:
         return len(self.children)
@@ -45,14 +48,20 @@ class Element:
 
     def append(self, element: Self):
         self.children.append(element)
+        element.parent = self
 
     def extend(self, elements: Iterator[Self]):
         self.children.extend(elements)
+        for elem in elements:
+            elem.parent = self
 
     def remove(self, element: Self):
         self.children.remove(element)
+        element.parent = None
 
     def clear(self):
+        for elem in self.children:
+            elem.parent = None
         self.children.clear()
 
     def get(self, key: bytes, default: Any = None):
@@ -70,6 +79,12 @@ class Element:
     def items(self):
         return self.attrib.items()
 
+    def iter(self) -> Iterator[Self]:
+        """iterate all children recursively from parent"""
+        children = [*self.children]
+        for child in children:
+            yield child
+            children.extend(child.children)
 
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
@@ -78,10 +93,8 @@ class _Special(Element):
         super().__init__(self.__class__.__name__.encode())
         self.text = text
 
-
 class Comment(_Special):
     pass
-
 
 class ProcessingInstruction(_Special):
     pass

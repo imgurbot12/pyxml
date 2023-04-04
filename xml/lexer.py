@@ -6,7 +6,7 @@ from typing import Optional
 
 from ._tokenize import *
 
-# ** Variables **#
+#** Variables **#
 __all__ = ['Token', 'Lexer']
 
 OPEN_TAG = ord('<')
@@ -18,8 +18,7 @@ QUESTION = ord('?')
 
 SPECIAL = b'=<>'
 
-
-# ** Classes **#
+#** Classes **#
 
 class Token(IntEnum):
     TAG_START = 1
@@ -30,7 +29,6 @@ class Token(IntEnum):
     COMMENT = 7
     DECLARATION = 8
     INSTRUCTION = 9
-
 
 class Lexer(BaseLexer):
     """
@@ -72,7 +70,7 @@ class Lexer(BaseLexer):
         """
         read buffer until a space is found or special terminators
         """
-        return super().read_word(value, SPECIAL)
+        return super().read_word(value, terminate or SPECIAL)
 
     def read_text(self, value: bytearray):
         """

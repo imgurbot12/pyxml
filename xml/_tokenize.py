@@ -3,7 +3,7 @@ BaseClass Tokenizer Implementation for various Lexers
 """
 from typing import NamedTuple, Optional, Iterator, Generator
 
-# ** Variables **#
+#** Variables **#
 __all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']
 
 #: bytearray containing valid space characters
@@ -15,13 +15,11 @@ QUOTES = b'"\''
 #: typehint for data stream of single bytes
 DataStream = Iterator[int]
 
-
-# ** Classes **#
+#** Classes **#
 
 class Result(NamedTuple):
     token: int
     value: bytes
-
 
 class BaseLexer:
     """

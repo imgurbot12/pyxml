@@ -1,7 +1,7 @@
 """
 XML Tree Builder Implementation
 """
-from typing import Dict, List, Type, Optional
+from typing import Dict, List, Optional
 
 from .etree import *
 
@@ -16,9 +16,9 @@ class TreeBuilder:
 
     def __init__(self,
                  root: Optional[Element] = None,
-                 element_factory: Type[Element] = Element,
-                 comment_factory: Type[Element] = Comment,
-                 pi_factory: Type[Element] = ProcessingInstruction,
+                 element_factory = Element,
+                 comment_factory = Comment,
+                 pi_factory = ProcessingInstruction,
                  include_comments: bool = False,
                  include_pi: bool = False,
                  ):
@@ -59,7 +59,7 @@ class TreeBuilder:
         elif self.root is None:
             self.root = elem
 
-    def _inline(self, factory: Type[Element], *args):
+    def _inline(self, factory, *args):
         """generate single inline element and append it to the tree"""
         self._flush()
         elem = factory(*args)

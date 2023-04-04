@@ -6,15 +6,14 @@ from typing import List, Dict
 from .lexer import DataStream, Token, Lexer
 from .builder import TreeBuilder
 
-# ** Variables **#
+#** Variables **#
 __all__ = ['Parser']
 
 SLASH = b'/'
 COLON = b':'
 NS_PREFIX = b'xmlns'
 
-
-# ** Classes **#
+#** Classes **#
 
 class Parser:
     """
