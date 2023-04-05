@@ -7,13 +7,15 @@ from ._tokenize import *
 
 #** Variables **#
 
-OPEN_TAG  = ord('<')
-CLOSE_TAG = ord('>')
-EQUALS    = ord('=')
-BANG      = ord('!')
-DASH      = ord('-')
-QUESTION  = ord('?')
-SLASH     = ord('/')
+OPEN_TAG    = ord('<')
+CLOSE_TAG   = ord('>')
+EQUALS      = ord('=')
+BANG        = ord('!')
+DASH        = ord('-')
+QUESTION    = ord('?')
+SLASH       = ord('/')
+OPEN_BRACK  = ord('[')
+CLOSE_BRACK = ord(']')
 
 SPECIAL    = b'=<>/'
 ONLY_SLASH = b'/'
@@ -81,10 +83,24 @@ class Lexer(BaseLexer):
                 value.extend(buffer)
                 buffer.clear()
             value.append(char)
-    
+
     def read_delcaration(self, value: bytearray):
         """read declaration string"""
-        self.read_comment(value)
+        brackets = 0
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            if char == OPEN_BRACK:
+                brackets += 1
+            elif char == CLOSE_BRACK:
+                brackets -= 1
+            elif char in QUOTES:
+                value.append(char)
+                self.read_quote(char, value)
+            elif char == CLOSE_TAG and brackets <= 0:
+                break
+            value.append(char)
 
     def read_instruction(self, value: bytearray):
         """read processing instruction tag"""
