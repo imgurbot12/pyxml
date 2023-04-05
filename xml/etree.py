@@ -59,7 +59,6 @@ def serialize_xml(f, element, short_empty_elements=False):
         f.write(element.tail or b'')
         return
     # close normally w/ children or otherwise disabled
-    print(element.tag, '%r %r' % (element.text, element.tail))
     f.write(b'>')
     f.write(element.text or b'')
     for child in element.children:
