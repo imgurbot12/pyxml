@@ -4,9 +4,22 @@ XML Tree Builder Implementation
 from typing import Dict, List, Optional
 
 from .etree import *
+from .etree import ESCAPE_ATTRIB
 
 #** Variables **#
 __all__ = ['TreeBuilder']
+
+#: reverse dictionary used to unescape special characters
+UNESCAPE_ATTRIB = {v:k for k,v in ESCAPE_ATTRIB.items()}
+
+#** Functions **#
+
+def unescape(text: bytes) -> bytes:
+    """unescape special characters for attributes"""
+    for char, replace in UNESCAPE_ATTRIB.items():
+        if char in text:
+            text = text.replace(char, replace)
+    return text
 
 #** Classes **#
 
@@ -43,7 +56,7 @@ class TreeBuilder:
         if self.last is None:
             self.text = []
             return
-        text = b''.join(self.text)
+        text = unescape(b''.join(self.text))
         if self.tail:
             if self.last.tail:
                 raise RuntimeError('Element tail already assigned')
@@ -72,7 +85,8 @@ class TreeBuilder:
     def start(self, tag: bytes, attrs: Dict[bytes, bytes]):
         """process start of a new tag and update tree"""
         self._flush()
-        elem = self.element_factory(tag, attrs)
+        attr = {k:unescape(v) for k,v in attrs.items()}
+        elem = self.element_factory(tag, attr)
         self._append(elem)
         self.tree.append(elem)
         self.tail = False
@@ -93,12 +107,12 @@ class TreeBuilder:
     def comment(self, comment: bytes):
         """generate and include comment (if enabled)"""
         if self.include_comments:
-            self._inline(self.comment_factory, comment)
+            self._inline(self.comment_factory, unescape(comment))
 
     def declaration(self, declaration: bytes):
         """generate and include declarations (if enabled)"""
         if self.root is not None and self.include_declare:
-            self._inline(self.declare_factory, declaration)
+            self._inline(self.declare_factory, unescape(declaration))
 
     def handle_pi(self, pi: bytes):
         """generate and include processing instruction (if enabled)"""

@@ -14,6 +14,22 @@ __all__ = [
     'ElementTree',
 ]
 
+#: escape translations for cdata elements
+ESCAPE_CDATA = {
+    b'&': b'&amp;',
+    b'<': b'&lt;',
+    b'>': b'&gt;',
+}
+
+#: escape translations for attributes
+ESCAPE_ATTRIB = {
+    **ESCAPE_CDATA,
+    b'"':  b'&quot;',
+    b'\r': b'&#13;',
+    b'\n': b'&#10;',
+    b'\t': b'&#09;',
+}
+
 TRUE  = b'true'
 QUOTE = b'"'
 
@@ -31,20 +47,35 @@ def quote(text: bytes) -> bytes:
     """quote escape"""
     return QUOTE + text.replace(QUOTE, b'\\"') + QUOTE
 
+def escape_cdata(text: bytes) -> bytes:
+    """escape special characters for text blocks"""
+    for char, replace in ESCAPE_CDATA.items():
+        if char in text:
+            text = text.replace(char, replace)
+    return text
+
+def escape_attrib(text: bytes) -> bytes:
+    """escape special characters for attributes"""
+    for char, replace in ESCAPE_ATTRIB.items():
+        if char in text:
+            text = text.replace(char, replace)
+    return text
+
 def serialize_xml(f, element, short_empty_elements=False):
     """serialize xml and write into file"""
     # serialize special elements differently
     if isinstance(element, _Special):
+        func = lambda b: b
         if isinstance(element, Comment):
-            start, end = b'<!-- ', b'-->'
+            start, end, func = b'<!-- ', b'-->', escape_cdata
         elif isinstance(element, Declaration):
-            start, end = b'<!', b'>'
+            start, end, func = b'<!', b'>', escape_cdata
         elif isinstance(element, ProcessingInstruction):
             start, end = b'<? ', b' ?>'
         else:
             raise RuntimeError('unsupported element', element)
-        f.write(start + (element.text or b'') + end)
-        f.write(element.tail or b'')
+        f.write(start + func(element.text or b'') + end)
+        f.write(escape_cdata(element.tail or b''))
         return
     # serialize normal elements accordingly
     f.write(b'<' + element.tag)
@@ -52,19 +83,19 @@ def serialize_xml(f, element, short_empty_elements=False):
         f.write(b' ' + name)
         if value and value != TRUE:
             f.write(b'=')
-            f.write(quote(value))
+            f.write(quote(escape_attrib(value)))
     # close w/ short form if enabled
     if short_empty_elements and not element.children and not element.text:
         f.write(b'/>')
-        f.write(element.tail or b'')
+        f.write(escape_cdata(element.tail or b''))
         return
     # close normally w/ children or otherwise disabled
     f.write(b'>')
-    f.write(element.text or b'')
+    f.write(escape_cdata(element.text or b''))
     for child in element.children:
         serialize_xml(f, child, short_empty_elements)
     f.write(b'</' + element.tag + b'>')
-    f.write(element.tail or b'')
+    f.write(escape_cdata(element.tail or b''))
 
 #** Classes **#
 
