@@ -81,10 +81,16 @@ def compile_argument(arg: Result) -> ArgGetter:
     return getter
 
 def get_int(arg: ArgValue) -> int:
-    """retrieve integer value for resulted expression token"""
+    """retrieve integer value from argument-value"""
     if not arg.value.isdigit():
         raise ValueError('invalid integer', arg)
     return int(arg.value)
+
+def get_bool(arg: ArgValue) -> bool:
+    """retrieve boolean value from argument-value"""
+    if arg.value not in (b'0', b'1', b'true', b'false'):
+        raise ValueError('invalid boolean', arg)
+    return arg.value in (b'1', b'true')
 
 def get_value(arg: ArgValue) -> Union[bool, int, bytes]:
     """retrieve python value for arg-value"""
@@ -124,6 +130,8 @@ def compare_gte(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """basic GREATER-THAN-EQUAL comparison"""
     return get_int(one) >= get_int(two)
 
+## Node Functions
+
 def name(e: Element) -> bytes:
     """XPATH `name` function implementation"""
     return e.tag
@@ -136,10 +144,6 @@ def text(e: Element) -> bytes:
             text += b' ' + child.tail
     return bytes(text)
 
-def contains(_: Element, one: ArgValue, two: ArgValue) -> bool:
-    """XPATH `contains` function implentation"""
-    return two.value in one.value
-
 def count(e: Element, tag: ArgValue) -> int:
     """XPATH `count` function implementation"""
     return sum(c.tag == tag.value for c in e.children)
@@ -151,6 +155,67 @@ def position(e: Element) -> int:
             if elem == e:
                 return n
     return 0
+
+## Boolean Functions
+
+def not_eq(_: Element, one: ArgValue) -> bool:
+    """XPATH `not` function implementation"""
+    return not get_bool(one)
+
+## String Functions
+
+def contains(_: Element, one: ArgValue, two: ArgValue) -> bool:
+    """XPATH `contains` function implentation"""
+    return two.value in one.value
+
+def starts_with(_: Element, one: ArgValue, two: ArgValue) -> bool:
+    """XPATH `starts-with` function implementation"""
+    return one.value.startswith(two.value)
+
+def ends_with(_: Element, one: ArgValue, two: ArgValue) -> bool:
+    """XPATH `ends-with` function implementation"""
+    return one.value.endswith(two.value)
+
+def concat(_: Element, one: ArgValue, two: ArgValue) -> bytes:
+    """XPATH `concat` function implementation"""
+    return one.value + two.value
+
+def substring(_: Element, b: ArgValue, s: ArgValue, e: ArgValue) -> bytes:
+    """XPATH `substring` function implementation"""
+    return b.value[get_int(s):get_int(e)]
+
+def substring_before(_: Element, base: ArgValue, sub: ArgValue) -> bytes:
+    """XPATH `substring-before` function implementation"""
+    index = base.value.find(sub.value)
+    index = index if index >= 0 else len(base.value)
+    return base.value[:index]
+
+def substring_after(_: Element, base: ArgValue, sub: ArgValue) -> bytes:
+    """XPATH `substring-after` function implementation"""
+    index = base.value.find(sub.value)
+    index = index if index >= 0 else len(base.value)
+    return base.value[index:]
+
+def translate(_: Element, base: ArgValue, b: ArgValue, a: ArgValue) -> bytes:
+    """XPATH `translate` fucntion implementation"""
+    return base.value.replace(b.value, a.value)
+
+def lower_case(_: Element, v: ArgValue) -> bytes:
+    """XPATH `lower-case` function implementation"""
+    return v.value.lower()
+
+def upper_case(_: Element, v: ArgValue) -> bytes:
+    """XPATH `upper-case` function implementation"""
+    return v.value.upper()
+
+## Axis Functions
+
+def last(e: Element) -> bool:
+    """XPATH `last` function implementation"""
+    if e.parent:
+        children = e.parent.children
+        return children.index(e) == len(children) - 1
+    return True
 
 #** Init **#
 
@@ -167,9 +232,19 @@ BUILTIN = {
 
 #: map of XPATH supported functions assigned by name
 FUNCTIONS = {
-    b'name':     name,
-    b'text':     text,
-    b'contains': contains,
-    b'count':    count,
-    b'position': position,
+    b'name':             name,
+    b'text':             text,
+    b'count':            count,
+    b'position':         position,
+    b'not':              not_eq,
+    b'contains':         contains,
+    b'starts-with':      starts_with,
+    b'ends-with':        ends_with,
+    b'substring':        substring,
+    b'substring-before': substring_before,
+    b'substring-after':  substring_after,
+    b'translate':        translate,
+    b'lower-case':       lower_case,
+    b'upper-case':       upper_case,
+    b'last':             last,
 }

@@ -193,8 +193,12 @@ class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
 
     def __init__(self, text: bytes):
-        super().__init__(self.__class__.__name__.encode())
+        self._cname = self.__class__.__name__
+        super().__init__(self._cname.encode())
         self.text = text
+    
+    def __repr__(self) -> str:
+        return f'{self._cname}(text={self.text})'
 
     def itertext(self):
         return

@@ -118,7 +118,7 @@ class XLexer(BaseLexer):
                 break
             raise ValueError('invalid character?', token, chr(char))
         # convert to function if ends with `()`
-        if value.endswith(FUNC):
+        if token != XToken.FILTER and value.endswith(FUNC):
             token = XToken.FUNCTION
         return Result(token, bytes(value))
 
