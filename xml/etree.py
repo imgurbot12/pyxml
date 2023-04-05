@@ -14,6 +14,9 @@ __all__ = [
     'ElementTree',
 ]
 
+TRUE  = b'true'
+QUOTE = b'"'
+
 #** Functions **#
 
 def stream_file(f: BinaryIO, chunk_size: int = 8192) -> Iterator[int]:
@@ -23,6 +26,46 @@ def stream_file(f: BinaryIO, chunk_size: int = 8192) -> Iterator[int]:
         if not chunk:
             break
         yield from chunk
+
+def quote(text: bytes) -> bytes:
+    """quote escape"""
+    return QUOTE + text.replace(QUOTE, b'\\"') + QUOTE
+
+def serialize_xml(f, element, short_empty_elements=False):
+    """serialize xml and write into file"""
+    # serialize special elements differently
+    if isinstance(element, _Special):
+        if isinstance(element, Comment):
+            start, end = b'<!-- ', b'-->'
+        elif isinstance(element, Declaration):
+            start, end = b'<!', b'>'
+        elif isinstance(element, ProcessingInstruction):
+            start, end = b'<? ', b' ?>'
+        else:
+            raise RuntimeError('unsupported element', element)
+        f.write(start + (element.text or b'') + end)
+        f.write(element.tail or b'')
+        return
+    # serialize normal elements accordingly
+    f.write(b'<' + element.tag)
+    for name, value in element.attrib.items():
+        f.write(b' ' + name)
+        if value and value != TRUE:
+            f.write(b'=')
+            f.write(quote(value))
+    # close w/ short form if enabled
+    if short_empty_elements and not element.children and not element.text:
+        f.write(b'/>')
+        f.write(element.tail or b'')
+        return
+    # close normally w/ children or otherwise disabled
+    print(element.tag, '%r %r' % (element.text, element.tail))
+    f.write(b'>')
+    f.write(element.text or b'')
+    for child in element.children:
+        serialize_xml(f, child, short_empty_elements)
+    f.write(b'</' + element.tag + b'>')
+    f.write(element.tail or b'')
 
 #** Classes **#
 
@@ -166,8 +209,9 @@ class ElementTree:
     def findtext(self, path: bytes):
         return self.getroot().findtext(path)
 
-    def write(self):
-        pass
+    def write(self, f: BinaryIO, short_empty_elements: bool = True):
+        return serialize_xml(f, self.getroot(), short_empty_elements)
+        
 
 #** Init **#
 from . import xpath as xpathlib

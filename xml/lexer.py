@@ -38,33 +38,19 @@ class Lexer(BaseLexer):
     Simple XML Lexer/Tokenizer
     """
 
-    def read_byte(self) -> int | None:
-        """
-        read next byte from array
-        """
-        if not self.buffer:
-            try:
-                return next(self.stream)
-            except StopIteration:
-                return
-        return self.buffer.pop(0)
-
     def guess_token(self, char: int, value: bytearray) -> int:
         """
         guess the token-type based on a single character
         """
         # assume tag by a single character
         if char == OPEN_TAG:
-            self.skip_spaces()
             return Token.TAG_START
         elif char == SLASH:
-            self.skip_spaces()
             next_byte = self.read_byte()
             if next_byte == CLOSE_TAG:
                 return Token.TAG_CLOSE
             self.unread(next_byte)
         elif char == CLOSE_TAG:
-            self.skip_spaces()
             return Token.TAG_END
         elif char == EQUALS:
             self.skip_spaces()
@@ -195,7 +181,7 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             # append buffered character if not a quote
-            if char not in QUOTES and char not in SPACES:
+            if char not in QUOTES:
                 value.append(char)
             # handle tag types separately
             if token == Token.TAG_START:

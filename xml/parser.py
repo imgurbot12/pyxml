@@ -3,7 +3,7 @@ Abstracted Python XML Parser Implementation
 """
 from typing import List, Dict
 
-from .lexer import DataStream, Token, Lexer
+from .lexer2 import DataStream, Token, Lexer
 from .builder import TreeBuilder
 
 #** Variables **#
