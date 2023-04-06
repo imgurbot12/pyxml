@@ -3,23 +3,11 @@ XML Tree Builder Implementation
 """
 from typing import Dict, List, Optional
 
-from .etree import *
-from .etree import ESCAPE_ATTRIB
+from .element import *
+from .escape import unescape
 
 #** Variables **#
 __all__ = ['TreeBuilder']
-
-#: reverse dictionary used to unescape special characters
-UNESCAPE_ATTRIB = {v:k for k,v in ESCAPE_ATTRIB.items()}
-
-#** Functions **#
-
-def unescape(text: bytes) -> bytes:
-    """unescape special characters for attributes"""
-    for char, replace in UNESCAPE_ATTRIB.items():
-        if char in text:
-            text = text.replace(char, replace)
-    return text
 
 #** Classes **#
 
