@@ -4,7 +4,7 @@ XPath Expression/Filter Functions
 from .._compat import Callable, List, NamedTuple, Union, wraps
 
 from .lexer import EToken
-from ..etree import Element
+from ..element import Element
 from .._tokenize import Result
 
 #** Variables **#
