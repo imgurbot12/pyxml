@@ -1,7 +1,7 @@
 """
 BaseClass Tokenizer Implementation for various Lexers
 """
-from typing import NamedTuple, Optional, Iterator, Generator
+from ._compat import NamedTuple, Optional, Iterator, Generator
 
 #** Variables **#
 __all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']

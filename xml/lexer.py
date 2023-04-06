@@ -1,7 +1,8 @@
 """
 Xml Parser Lexer/Tokenizer
 """
-from enum import IntEnum
+# from ._compat import IntEnum
+from ._compat import IntEnum
 
 from ._tokenize import *
 

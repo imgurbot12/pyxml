@@ -1,7 +1,7 @@
 """
 XML Tree Builder Implementation
 """
-from typing import Dict, List, Optional
+from ._compat import Dict, List, Optional
 
 from .etree import *
 from .etree import ESCAPE_ATTRIB

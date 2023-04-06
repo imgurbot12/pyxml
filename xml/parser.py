@@ -1,7 +1,7 @@
 """
 Abstracted Python XML Parser Implementation
 """
-from typing import List, Dict
+from ._compat import List, Dict
 
 from .lexer import DataStream, Token, Lexer
 from .builder import TreeBuilder

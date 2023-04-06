@@ -1,7 +1,7 @@
 """
 XPATH Processing Engine
 """
-from typing import Iterator, List, Optional, Tuple
+from .._compat import Iterator, List, Optional, Tuple
 
 from .lexer import XToken, XLexer, EToken, ELexer
 from .functions import *

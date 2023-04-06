@@ -1,8 +1,8 @@
 """
 XML Elements and ElementTree Implementation
 """
-from typing import List, Optional, Iterator, Any, BinaryIO
-from typing_extensions import Self
+from ._compat import List, Optional, Iterator, Any, BinaryIO, Self
+
 
 #** Variables **#
 __all__ = [

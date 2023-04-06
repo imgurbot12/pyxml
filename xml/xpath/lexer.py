@@ -1,8 +1,7 @@
 """
 XPATH Search Syntax Lexer
 """
-import string
-from enum import IntEnum
+from .._compat import IntEnum, string
 
 from .._tokenize import *
 

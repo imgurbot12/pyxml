@@ -1,8 +1,7 @@
 """
 XPath Expression/Filter Functions
 """
-from functools import wraps
-from typing import Callable, List, NamedTuple, Union
+from .._compat import Callable, List, NamedTuple, Union, wraps
 
 from .lexer import EToken
 from ..etree import Element
