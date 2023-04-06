@@ -5,7 +5,7 @@ from functools import wraps
 from typing import Callable, List, NamedTuple, Union
 
 from .lexer import EToken
-from ..etree import Element
+from ..element import Element
 from .._tokenize import Result
 
 #** Variables **#

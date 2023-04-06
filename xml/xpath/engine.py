@@ -5,7 +5,7 @@ from typing import Iterator, List, Optional, Tuple
 
 from .lexer import XToken, XLexer, EToken, ELexer
 from .functions import *
-from ..etree import Element
+from ..element import Element
 from .._tokenize import Result
 
 #** Variables **#

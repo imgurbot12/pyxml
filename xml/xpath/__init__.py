@@ -4,7 +4,7 @@ XML Xpath Query-Language Implementation
 from typing import Iterator, Optional, List
 
 from .engine import iter_xpath, find_xpath, list_xpath
-from ..etree import Element
+from ..element import Element
 
 #** Variables **#
 __all__ = ['iterfind', 'find', 'findall', 'findtext']
