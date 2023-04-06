@@ -34,7 +34,7 @@ class BaseLexer:
         self.buffer = bytearray()
         self.last_token = 0
 
-    def read_byte(self) -> int | None:
+    def read_byte(self) -> Optional[int]:  # int | None
         """
         read next byte from array
         """
