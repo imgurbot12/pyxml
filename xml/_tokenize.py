@@ -7,13 +7,13 @@ from ._compat import NamedTuple, Optional, Iterator, Generator
 __all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']
 
 #: bytearray containing valid space characters
-SPACES = b'\n\r\t '
+SPACES = [10, 13, 9, 32]  # b'\n\r\t '
 
 #: bytearray containing valid quote characters
-QUOTES = b'"\''
+QUOTES = [34, 39]  # b'"\''
 
 #: slash character byte
-SLASH = ord('\\')
+SLASH = 92  # ord(b'\\')
 
 #: typehint for data stream of single bytes
 DataStream = Iterator[int]
