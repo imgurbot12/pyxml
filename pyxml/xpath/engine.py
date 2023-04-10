@@ -16,11 +16,6 @@ Args = List[ArgGetter]
 
 #** Functions **#
 
-def stream(data: bytes):
-    """stream bytes from bytestring for lexer"""
-    for byte in data:
-        yield byte
-
 def children(elem: Element) -> Iterator[Element]:
     """stream children attached to the specified element"""
     for child in elem:
@@ -34,7 +29,7 @@ def filter_tag(elements: Iterator[Element], tag: bytes) -> Iterator[Element]:
 
 def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     """compile a valid xpath filter expression"""
-    lexer = ELexer(stream(expr))
+    lexer = ELexer(iter(expr))
     args: Args = []
     action: Optional[Result] = None
     compiled: EvalExpr = lambda _: False
@@ -89,7 +84,7 @@ def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
     :param elements: elements to search for xpath components
     :return:         iterator of elements matching xpath criteria
     """
-    lexer = XLexer(stream(xpath))
+    lexer = XLexer(iter(xpath))
     for action in lexer.iter():
         # process action according to token-type
         token, value = action

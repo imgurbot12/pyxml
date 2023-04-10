@@ -77,7 +77,7 @@ class Lexer(BaseLexer):
                 if value:
                     buffer.append(char)
                 continue
-            if char == CLOSE_TAG:
+            if char == CLOSE_TAG and len(buffer) >= 2:
                 break
             if buffer:
                 value.extend(buffer)
@@ -110,12 +110,12 @@ class Lexer(BaseLexer):
             if char is None:
                 break
             if char in QUOTES:
+                value.append(char)
                 self.read_quote(char, value)
-                continue
-            if char == QUESTION:
+            elif char == QUESTION:
                 question = True
                 continue
-            if question:
+            elif question:
                 if char == CLOSE_TAG:
                     return
                 question = False

@@ -20,12 +20,12 @@ __all__ = [
 ]
 
 #: evaluation expression function
-EvalExpr = Callable[[Element], Union[int, bool, bytes]]
+EvalExpr = Callable[[Element], Union[int, bool, str]]
 
 #: argument value typehint
 class ArgValue(NamedTuple):
     result: Result
-    value:  bytes
+    value:  str
 
 #: argument getter function
 ArgGetter = Callable[[Element], ArgValue]
@@ -39,10 +39,10 @@ def wrap_expr(action: Result, expr: EvalExpr) -> ArgGetter:
         # run expression and convert type back to bytes
         raw = expr(e)
         if isinstance(raw, bool):
-            value = b'true' if raw else b'false'
+            value = 'true' if raw else 'false'
         elif isinstance(raw, int):
-            value = str(raw).encode()
-        elif isinstance(raw, bytes):
+            value = str(raw)
+        elif isinstance(raw, str):
             value = raw
         else:
             raise ValueError('unexpected expression result', action, raw)
@@ -69,12 +69,14 @@ def compile_argument(arg: Result) -> ArgGetter:
     """compile argument collector function"""
     def getter(e: Element) -> ArgValue:
         # assign value
-        if arg.token == EToken.VARIABLE:
-            val = e.attrib.get(arg.value, b'')
+        token, value = arg
+        value        = value.decode()
+        if token == EToken.VARIABLE:
+            val = e.attrib.get(value, '')
         else:
-            val = arg.value
+            val = value
         # assert value matches token and return arg-value
-        if arg.token == EToken.INTEGER and not arg.value.isdigit():
+        if token == EToken.INTEGER and not value.isdigit():
             raise ValueError('invalid integer', arg)
         return ArgValue(arg, val)
     getter.__qualname__ = f'Getter[{arg.token!r},{arg.value!r}]'
@@ -92,7 +94,7 @@ def get_bool(arg: ArgValue) -> bool:
         raise ValueError('invalid boolean', arg)
     return arg.value in (b'1', b'true')
 
-def get_value(arg: ArgValue) -> Union[bool, int, bytes]:
+def get_value(arg: ArgValue) -> Union[bool, int, str]:
     """retrieve python value for arg-value"""
     if arg.result.token in (EToken.VARIABLE, EToken.STRING):
         return arg.value
@@ -132,17 +134,17 @@ def compare_gte(_: Element, one: ArgValue, two: ArgValue) -> bool:
 
 ## Node Functions
 
-def name(e: Element) -> bytes:
+def name(e: Element) -> str:
     """XPATH `name` function implementation"""
     return e.tag
 
-def text(e: Element) -> bytes:
+def text(e: Element) -> str:
     """XPATH `text` function implementation"""
-    text = bytearray(e.text or b'')
+    text = e.text or ''
     for child in e.children:
         if child.tail:
-            text += b' ' + child.tail
-    return bytes(text)
+            text += ' ' + child.tail
+    return text
 
 def count(e: Element, tag: ArgValue) -> int:
     """XPATH `count` function implementation"""
@@ -176,35 +178,35 @@ def ends_with(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """XPATH `ends-with` function implementation"""
     return one.value.endswith(two.value)
 
-def concat(_: Element, one: ArgValue, two: ArgValue) -> bytes:
+def concat(_: Element, one: ArgValue, two: ArgValue) -> str:
     """XPATH `concat` function implementation"""
     return one.value + two.value
 
-def substring(_: Element, b: ArgValue, s: ArgValue, e: ArgValue) -> bytes:
+def substring(_: Element, b: ArgValue, s: ArgValue, e: ArgValue) -> str:
     """XPATH `substring` function implementation"""
     return b.value[get_int(s):get_int(e)]
 
-def substring_before(_: Element, base: ArgValue, sub: ArgValue) -> bytes:
+def substring_before(_: Element, base: ArgValue, sub: ArgValue) -> str:
     """XPATH `substring-before` function implementation"""
     index = base.value.find(sub.value)
     index = index if index >= 0 else len(base.value)
     return base.value[:index]
 
-def substring_after(_: Element, base: ArgValue, sub: ArgValue) -> bytes:
+def substring_after(_: Element, base: ArgValue, sub: ArgValue) -> str:
     """XPATH `substring-after` function implementation"""
     index = base.value.find(sub.value)
     index = index if index >= 0 else len(base.value)
     return base.value[index:]
 
-def translate(_: Element, base: ArgValue, b: ArgValue, a: ArgValue) -> bytes:
+def translate(_: Element, base: ArgValue, b: ArgValue, a: ArgValue) -> str:
     """XPATH `translate` fucntion implementation"""
     return base.value.replace(b.value, a.value)
 
-def lower_case(_: Element, v: ArgValue) -> bytes:
+def lower_case(_: Element, v: ArgValue) -> str:
     """XPATH `lower-case` function implementation"""
     return v.value.lower()
 
-def upper_case(_: Element, v: ArgValue) -> bytes:
+def upper_case(_: Element, v: ArgValue) -> str:
     """XPATH `upper-case` function implementation"""
     return v.value.upper()
 

@@ -1,41 +1,33 @@
 """
 XML Tree Builder Implementation
 """
-from typing import Dict, List, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Type
 
 from .element import *
-from .escape import unescape
 
 #** Variables **#
 __all__ = ['TreeBuilder']
 
 #** Classes **#
 
+@dataclass(repr=False)
 class TreeBuilder:
     """Simple XML Tree Building Implementation"""
-
-    def __init__(self,
-        root: Optional[Element] = None,
-        element_factory = Element,
-        comment_factory = Comment,
-        declare_factory = Declaration,
-        pi_factory = ProcessingInstruction,
-        include_comments: bool = False,
-        include_declare: bool = False,
-        include_pi: bool = False,
-    ):
-        self.element_factory = element_factory
-        self.comment_factory = comment_factory
-        self.declare_factory = declare_factory
-        self.pi_factory = pi_factory
-        self.include_comments = include_comments
-        self.include_declare = include_declare
-        self.include_pi = include_pi
-        self.root: Optional[Element] = root
-        self.last: Optional[Element] = root
-        self.tree: List[Element] = [] if root is None else [root]
-        self.text: List[bytes] = []
-        self.tail: bool = False
+    root:            Optional[Element] = None
+    element_factory: Type[Element]     = Element
+    comment_factory: Type[Element]     = Comment
+    declare_factory: Type[Element]     = Declaration
+    pi_factory:      Type[Element]     = ProcessingInstruction
+    insert_comments: bool              = False
+    insert_declares: bool              = False
+    insert_pis:      bool              = False
+ 
+    def __post_init__(self):
+        self.last: Optional[Element] = self.root
+        self.tree: List[Element]     = [] if self.root is None else [self.root]
+        self.text: List[str]         = []
+        self.tail: bool              = False
 
     def _flush(self):
         """flush collected text to right position in tree"""
@@ -44,7 +36,7 @@ class TreeBuilder:
         if self.last is None:
             self.text = []
             return
-        text = unescape(b''.join(self.text))
+        text = ''.join(self.text)
         if self.tail:
             if self.last.tail:
                 raise RuntimeError('Element tail already assigned')
@@ -70,16 +62,15 @@ class TreeBuilder:
         self._append(elem)
         self.tail = True
 
-    def start(self, tag: bytes, attrs: Dict[bytes, bytes]):
+    def start(self, tag: str, attrs: Dict[str, str]):
         """process start of a new tag and update tree"""
         self._flush()
-        attr = {k:unescape(v) for k,v in attrs.items()}
-        elem = self.element_factory(tag, attr)
+        elem = self.element_factory(tag, attrs)
         self._append(elem)
         self.tree.append(elem)
         self.tail = False
 
-    def end(self, tag: bytes):
+    def end(self, tag: str):
         """process end of an existing tag and update tree"""
         self._flush()
         self.last = self.tree.pop()
@@ -87,22 +78,33 @@ class TreeBuilder:
             raise RuntimeError(
                 f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
         self.tail = True
+    
+    def startend(self, tag: str, attrs: Dict[str, str]):
+        """process self closing tags"""
+        self.start(tag, attrs)
+        self.end(tag)
 
-    def data(self, data: bytes):
+    def data(self, data: str):
         """process incoming text block"""
         self.text.append(data)
 
-    def comment(self, comment: bytes):
+    def comment(self, text: str):
         """generate and include comment (if enabled)"""
-        if self.include_comments:
-            self._inline(self.comment_factory, unescape(comment))
+        if self.insert_comments:
+            self._inline(self.comment_factory, text)
 
-    def declaration(self, declaration: bytes):
+    def declaration(self, declaration: str):
         """generate and include declarations (if enabled)"""
-        if self.root is not None and self.include_declare:
-            self._inline(self.declare_factory, unescape(declaration))
+        if self.root is not None and self.insert_declares:
+            self._inline(self.declare_factory, declaration)
 
-    def handle_pi(self, pi: bytes):
+    def pi(self, target: str, pi: str):
         """generate and include processing instruction (if enabled)"""
-        if self.include_pi:
-            self._inline(self.pi_factory, pi)
+        if self.insert_pis:
+            self._inline(self.pi_factory, target, pi)
+
+    def close(self):
+        """close builder and return root element"""
+        assert len(self.tree) == 0,   'missing end tags'
+        assert self.root is not None, 'missing toplevel element'
+        return self.root
