@@ -16,11 +16,6 @@ Args = List[ArgGetter]
 
 #** Functions **#
 
-def children(elem: Element) -> Iterator[Element]:
-    """stream children attached to the specified element"""
-    for child in elem:
-        yield child
-
 def filter_tag(elements: Iterator[Element], tag: str) -> Iterator[Element]:
     """only return element if it matches the specified tag"""
     for elem in elements:
@@ -29,10 +24,15 @@ def filter_tag(elements: Iterator[Element], tag: str) -> Iterator[Element]:
 
 def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     """compile a valid xpath filter expression"""
+    # generate context for compiling expression
     lexer = ELexer(iter(expr))
     args: Args = []
     action: Optional[Result] = None
     compiled: EvalExpr = lambda _: False
+    # modify action for integer filters
+    if expr.isdigit():
+        action = Result(EToken.FUNCTION, b'index')
+    # parse expression according to lexer bytes
     while True:
         # retrieve next action in expression
         result = lexer.next()
@@ -89,7 +89,7 @@ def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
         # process action according to token-type
         token, value = action
         if token == XToken.CHILD:
-            elems = (c for e in elements for c in children(e))
+            elems = (c for e in elements for c in e)
         elif token == XToken.DECENDANT:
             elems = (c for e in elements for c in e.iter())
         elif token == XToken.NODE:

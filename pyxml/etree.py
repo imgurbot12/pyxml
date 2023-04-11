@@ -8,7 +8,7 @@ from .element import *
 from .element import _Special
 from .parser import FeedParser
 from .escape import escape_cdata, escape_attrib
-from .html.parser import HTML_EMPTY, HTMLTreeParser
+from .html.parser import HTML_EMPTY
 
 #** Variables **#
 __all__ = ['tostring', 'fromstring', 'ElementTree']
@@ -116,16 +116,16 @@ class ElementTree:
     def iter(self, tag=None):
         return self.getroot().iter(tag)
 
-    def find(self, path: bytes):
+    def find(self, path: str):
         return self.getroot().find(path)
 
-    def findall(self, path: bytes):
+    def findall(self, path: str):
         return self.getroot().findall(path)
     
-    def finditer(self, path: bytes):
+    def finditer(self, path: str):
         return self.getroot().finditer(path)
 
-    def findtext(self, path: bytes):
+    def findtext(self, path: str):
         return self.getroot().findtext(path)
 
     def write(self, f: BinaryIO,

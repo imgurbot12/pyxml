@@ -90,9 +90,9 @@ def get_int(arg: ArgValue) -> int:
 
 def get_bool(arg: ArgValue) -> bool:
     """retrieve boolean value from argument-value"""
-    if arg.value not in (b'0', b'1', b'true', b'false'):
+    if arg.value not in ('0', '1', 'true', 'false'):
         raise ValueError('invalid boolean', arg)
-    return arg.value in (b'1', b'true')
+    return arg.value in ('1', 'true')
 
 def get_value(arg: ArgValue) -> Union[bool, int, str]:
     """retrieve python value for arg-value"""
@@ -131,6 +131,12 @@ def compare_gt(_: Element, one: ArgValue, two: ArgValue) -> bool:
 def compare_gte(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """basic GREATER-THAN-EQUAL comparison"""
     return get_int(one) >= get_int(two)
+
+def index(e: Element, idx: ArgValue) -> bool:
+    """XPATH integer indexing function"""
+    index  = get_int(idx)
+    actual = e.parent.children.index(e) + 1
+    return actual == index
 
 ## Node Functions
 
@@ -234,6 +240,7 @@ BUILTIN = {
 
 #: map of XPATH supported functions assigned by name
 FUNCTIONS = {
+    b'index':            index,
     b'name':             name,
     b'text':             text,
     b'count':            count,

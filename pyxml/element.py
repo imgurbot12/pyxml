@@ -29,10 +29,13 @@ class Element:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
     
     def __iter__(self) -> Iterator[Self]:
-        return (child for child in self.children)
+        return iter(self.children)
 
     def __len__(self) -> int:
         return len(self.children)
+
+    def __bool__(self):
+        raise NotImplementedError
 
     def __getitem__(self, index: int) -> Self:
         return self.children[index]

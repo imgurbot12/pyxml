@@ -45,7 +45,6 @@ class XToken(IntEnum):
     FILTER = 5
     FUNCTION = 6
 
-
 class EToken(IntEnum):
     """XPath Expression Tokens"""
     BOOLEAN = 1
