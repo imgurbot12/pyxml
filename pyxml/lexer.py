@@ -6,6 +6,7 @@ from enum import IntEnum
 from ._tokenize import *
 
 #** Variables **#
+__all__ = ['Token', 'Lexer']
 
 OPEN_TAG    = ord('<')
 CLOSE_TAG   = ord('>')
@@ -36,9 +37,9 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     
-    def read_word(self, value: bytearray, terminate: bytes = b''):
+    def read_word(self, value: bytearray):
         """default terminate on XML special characters"""
-        return super().read_word(value, terminate or SPECIAL) 
+        return super().read_word(value, SPECIAL) 
     
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""

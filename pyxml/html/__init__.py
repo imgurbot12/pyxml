@@ -26,7 +26,7 @@ def tostring(element: Element, **kwargs) -> bytes:
     ElementTree(element).write(data, **kwargs)
     return data.getvalue()
 
-def fromstring(text: bytes, parser: Optional[HTMLTreeParser] = None) -> Element:
+def fromstring(text, parser: Optional[HTMLTreeParser] = None) -> Element:
     """
     convert raw html bytes into valid element tree
 
@@ -34,6 +34,7 @@ def fromstring(text: bytes, parser: Optional[HTMLTreeParser] = None) -> Element:
     :param parser: parser instance to process xml string
     :return:       html element tree
     """
+    text   = text.encode() if isinstance(text, str) else text
     parser = parser or HTMLTreeParser()
     parser.feed(text)
     return parser.close()

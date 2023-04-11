@@ -63,7 +63,7 @@ class BaseLexer:
                 self.unread(char)
                 break
 
-    def read_word(self, value: bytearray, terminate: bytes = b''):
+    def read_word(self, value: bytearray, terminate: Optional[bytes] = None):
         """
         read buffer until a space is found or special terminators
         """
@@ -71,7 +71,7 @@ class BaseLexer:
             char = self.read_byte()
             if char is None or char in SPACES:
                 break
-            if char in terminate:
+            if terminate and char in terminate:
                 self.unread(char)
                 break
             value.append(char)

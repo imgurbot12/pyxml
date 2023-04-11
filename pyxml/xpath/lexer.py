@@ -124,8 +124,8 @@ class XLexer(BaseLexer):
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""
 
-    def read_word(self, value: bytearray, terminate: bytes = b''):
-        return super().read_word(value, terminate or ESPECIAL)
+    def read_word(self, value: bytearray):
+        return super().read_word(value, ESPECIAL)
 
     def read_expression(self, value: bytearray):
         """
