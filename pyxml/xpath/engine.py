@@ -21,7 +21,7 @@ def children(elem: Element) -> Iterator[Element]:
     for child in elem:
         yield child
 
-def filter_tag(elements: Iterator[Element], tag: bytes) -> Iterator[Element]:
+def filter_tag(elements: Iterator[Element], tag: str) -> Iterator[Element]:
     """only return element if it matches the specified tag"""
     for elem in elements:
         if elem.tag == tag:
@@ -93,7 +93,7 @@ def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
         elif token == XToken.DECENDANT:
             elems = (c for e in elements for c in e.iter())
         elif token == XToken.NODE:
-            elems = (e for e in filter_tag(elements, value))
+            elems = (e for e in filter_tag(elements, value.decode()))
         elif token == XToken.WILDCARD:
             continue
         elif token == XToken.FILTER:

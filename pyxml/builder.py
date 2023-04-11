@@ -24,10 +24,11 @@ class TreeBuilder:
     insert_pis:      bool              = False
  
     def __post_init__(self):
-        self.last: Optional[Element] = self.root
-        self.tree: List[Element]     = [] if self.root is None else [self.root]
-        self.text: List[str]         = []
-        self.tail: bool              = False
+        self.last:  Optional[Element] = self.root
+        self.tree:  List[Element]     = [] if self.root is None else [self.root]
+        self.text:  List[str]         = []
+        self.tail:  bool              = False
+        self.final: int               = 0 if self.root is None else 1
 
     def _flush(self):
         """flush collected text to right position in tree"""
@@ -105,6 +106,6 @@ class TreeBuilder:
 
     def close(self):
         """close builder and return root element"""
-        assert len(self.tree) == 0,   'missing end tags'
-        assert self.root is not None, 'missing toplevel element'
+        assert len(self.tree) == self.final, 'missing end tags'
+        assert self.root is not None,        'missing toplevel element'
         return self.root

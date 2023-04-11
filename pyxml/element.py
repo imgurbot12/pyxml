@@ -94,16 +94,16 @@ class Element:
         for child in self.children:
             yield from child.itertext()
 
-    def find(self, path: bytes) -> Optional[Self]:
+    def find(self, path: str) -> Optional[Self]:
         return xpath.find(self, path)
 
-    def findall(self, path: bytes) -> List[Self]:
+    def findall(self, path: str) -> List[Self]:
         return xpath.findall(self, path)
 
-    def finditer(self, path: bytes) -> Iterator[Self]:
+    def finditer(self, path: str) -> Iterator[Self]:
         return xpath.iterfind(self, path)
 
-    def findtext(self, path: bytes, default=None) -> Optional[bytes]:
+    def findtext(self, path: str, default=None) -> Optional[str]:
         return xpath.findtext(self, path, default)
 
 class _Special(Element):

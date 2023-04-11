@@ -8,14 +8,10 @@ from .element import *
 from .element import _Special
 from .parser import FeedParser
 from .escape import escape_cdata, escape_attrib
+from .html.parser import HTML_EMPTY, HTMLTreeParser
 
 #** Variables **#
 __all__ = ['tostring', 'fromstring', 'ElementTree']
-
-#: list of empty html elements stolen from python stdlib
-HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",
-              "img", "input", "isindex", "link", "meta", "param", "source",
-              "track", "wbr"}
 
 #** Functions **#
 

@@ -4,7 +4,7 @@ Abstracted Python XML Parser Implementation
 import re
 from io import BytesIO
 from dataclasses import dataclass, field
-from typing import List, Dict, BinaryIO, Iterator
+from typing import List, Dict, BinaryIO, Iterator, Optional, Set
 
 from .lexer import DataStream, Token, Lexer
 from .builder import TreeBuilder
@@ -43,8 +43,12 @@ class Parser:
     def _decode(self, value: bytes) -> str:
         """decode value using appropriatly assigned encoding"""
         return value.decode(self.encoding)
+    
+    def unescape(self, value: str) -> str:
+        """unescape the specified value if enabled"""
+        return unescape(value)
 
-    def parse_tag(self, tag: str):
+    def parse_tag(self, tag: str, empty: Optional[Set[str]] = None):
         """
         iterate tokens from the lexer until single tag entry has been parsed
         """
@@ -79,12 +83,12 @@ class Parser:
                 incomplete.append(value)
                 continue
             elif token == Token.ATTR_VALUE:
-                attributes[incomplete.pop()] = unescape(value)
+                attributes[incomplete.pop()] = self.unescape(value)
                 continue
             raise RuntimeError('Unexpected Tag Token', result)
         # finalize processing for starting tag
         attributes.update({k:'true' for k in incomplete})
-        if closed:
+        if closed or (empty and tag in empty):
             if hasattr(self.builder, 'startend'):
                 self.builder.startend(tag, attributes)
             else:
@@ -117,9 +121,9 @@ class Parser:
         if token == Token.TAG_START:
             self.parse_tag(value)
         elif token == Token.TEXT:
-            self.builder.data(unescape(value))
+            self.builder.data(self.unescape(value))
         elif token == Token.COMMENT:
-            self.builder.comment(unescape(value))
+            self.builder.comment(self.unescape(value))
         elif token == Token.DECLARATION:
             self.builder.declaration(value)
         elif token == Token.INSTRUCTION:
