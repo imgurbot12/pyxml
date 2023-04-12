@@ -8,7 +8,10 @@ from .parser import HTMLTreeParser
 from ..element import Element
 
 #** Variables **#
-__all__ = ['tostring', 'fromstring']
+__all__ = ['tostring', 'fromstring', 'HtmlElement']
+
+#: compatability w/ lxml
+HtmlElement = Element
 
 #** Fuctions **#
 

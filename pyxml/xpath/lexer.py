@@ -9,6 +9,7 @@ from .._tokenize import *
 #** Variables **#
 __all__ = ['XToken', 'EToken', 'XLexer', 'ELexer']
 
+DOT   = ord('.')
 SLASH = ord('/')
 WILDCARD = ord('*')
 OPEN_BRACK = ord('[')
@@ -38,29 +39,31 @@ WORD = string.ascii_letters.encode() + DIGIT + b'_'
 
 class XToken(IntEnum):
     """XPath Tokens"""
-    CHILD = 1
-    DECENDANT = 2
-    NODE = 3
-    WILDCARD = 4
-    FILTER = 5
-    FUNCTION = 6
+    SELF      = 1
+    PARENT    = 2
+    CHILD     = 3
+    DECENDANT = 4
+    NODE      = 5
+    WILDCARD  = 6
+    FILTER    = 7
+    FUNCTION  = 8
 
 class EToken(IntEnum):
     """XPath Expression Tokens"""
-    BOOLEAN = 1
-    STRING = 2
-    INTEGER = 3
-    VARIABLE = 4
-    COMMA = 5
+    BOOLEAN    = 1
+    STRING     = 2
+    INTEGER    = 3
+    VARIABLE   = 4
+    COMMA      = 5
     EXPRESSION = 6
-    EQUALS = 7
-    FUNCTION = 8
-    LT = 9
-    GT = 10
-    LTE = 11
-    GTE = 12
-    AND = 13
-    OR = 14
+    EQUALS     = 7
+    FUNCTION   = 8
+    LT         = 9
+    GT         = 10
+    LTE        = 11
+    GTE        = 12
+    AND        = 13
+    OR         = 14
 
 class XLexer(BaseLexer):
     """XPath Path Lexer"""
@@ -91,7 +94,9 @@ class XLexer(BaseLexer):
                 break
             # guess token based on first byte
             if not token:
-                if char == SLASH:
+                if char == DOT:
+                    token = XToken.SELF
+                elif char == SLASH:
                     value.append(char)
                     token = XToken.CHILD
                 elif char == WILDCARD:
@@ -116,11 +121,19 @@ class XLexer(BaseLexer):
                 else:
                     self.unread(char)
                 break
+            elif token in (XToken.SELF, XToken.PARENT):
+                if char == DOT:
+                    token = XToken.PARENT
+                    value.append(char)
+                    continue
+                else:
+                    self.unread(char)
+                break
             raise ValueError('invalid character?', token, chr(char))
         # convert to function if ends with `()`
         if token != XToken.FILTER and value.endswith(FUNC):
             token = XToken.FUNCTION
-        return Result(token, bytes(value), 0, self.position)
+        return Result(token, bytes(value), 0, position)
 
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""

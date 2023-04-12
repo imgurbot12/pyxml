@@ -132,11 +132,19 @@ def compare_gte(_: Element, one: ArgValue, two: ArgValue) -> bool:
     """basic GREATER-THAN-EQUAL comparison"""
     return get_int(one) >= get_int(two)
 
+## Special Internal Functions
+
 def index(e: Element, idx: ArgValue) -> bool:
     """XPATH integer indexing function"""
     index  = get_int(idx)
-    actual = e.parent.children.index(e) + 1
+    actual = 0
+    if e.parent:
+        actual = e.parent.children.index(e) + 1
     return actual == index
+
+def isempty(_: Element, var: ArgValue) -> bool:
+    """XPATH variable isempty function"""
+    return bool(var.value)
 
 ## Node Functions
 
@@ -241,6 +249,7 @@ BUILTIN = {
 #: map of XPATH supported functions assigned by name
 FUNCTIONS = {
     b'index':            index,
+    b'isempty':          isempty,
     b'name':             name,
     b'text':             text,
     b'count':            count,

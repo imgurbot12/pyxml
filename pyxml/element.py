@@ -98,16 +98,32 @@ class Element:
             yield from child.itertext()
 
     def find(self, path: str) -> Optional[Self]:
+        """retrieve single elmement matching xpath"""
         return xpath.find(self, path)
 
     def findall(self, path: str) -> List[Self]:
+        """retrieve all elements in list matching xpath"""
         return xpath.findall(self, path)
 
     def finditer(self, path: str) -> Iterator[Self]:
+        """iterate all elements matching xpath"""
         return xpath.iterfind(self, path)
 
     def findtext(self, path: str, default=None) -> Optional[str]:
+        """collect all text within elements matching xpath"""
         return xpath.findtext(self, path, default)
+ 
+    def xpath(self, path: str) -> List[Self]:
+        """alias for findall to support lxml"""
+        return self.findall(path)
+
+    def getparent(self) -> Optional[Self]:
+        """retrieve parent for compatability with lxml"""
+        return self.parent
+
+    def getchildren(self) -> List[Self]:
+        """retrieve children for compatability with lxml"""
+        return self.children
 
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
