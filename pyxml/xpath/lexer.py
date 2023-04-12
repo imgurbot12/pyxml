@@ -82,8 +82,9 @@ class XLexer(BaseLexer):
 
     def _next(self) -> Result:
         """parse basic xpath syntax (avoiding filter content)"""
-        token = 0
-        value = bytearray()
+        token    = 0
+        value    = bytearray()
+        position = self.position
         while True:
             char = self.read_byte()
             if char is None:
@@ -119,7 +120,7 @@ class XLexer(BaseLexer):
         # convert to function if ends with `()`
         if token != XToken.FILTER and value.endswith(FUNC):
             token = XToken.FUNCTION
-        return Result(token, bytes(value))
+        return Result(token, bytes(value), 0, self.position)
 
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""
@@ -176,8 +177,9 @@ class ELexer(BaseLexer):
         return 0
 
     def _next(self) -> Result:
-        token = 0
-        value = bytearray()
+        token    = 0
+        value    = bytearray()
+        position = self.position
         while True:
             char = self.read_byte()
             if char is None or char in SPACES:
@@ -213,4 +215,4 @@ class ELexer(BaseLexer):
                 token = EToken.BOOLEAN
             elif value == FALSE:
                 token = EToken.BOOLEAN
-        return Result(token, bytes(value))
+        return Result(token, bytes(value), 0, position)

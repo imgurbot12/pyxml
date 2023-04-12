@@ -4,14 +4,14 @@ Abstracted Python XML Parser Implementation
 import re
 from io import BytesIO
 from dataclasses import dataclass, field
-from typing import List, Dict, BinaryIO, Iterator, Optional, Set
+from typing import List, Dict, BinaryIO, Iterator, Optional, Set, Tuple
 
-from .lexer import DataStream, Token, Lexer
+from .lexer import DataStream, Token, Lexer, Result
 from .builder import TreeBuilder
 from .escape import unescape
 
 #** Variables **#
-__all__ = ['Parser', 'FeedParser']
+__all__ = ['ParserError', 'Parser', 'FeedParser']
 
 #: regex expression to retrieve encoding setting from xml pi
 re_encoding = re.compile(r'encoding\s?=\s?([^\s,]+)', re.IGNORECASE)
@@ -27,6 +27,24 @@ def stream_file(f: BinaryIO, chunk_size: int = 8192) -> Iterator[int]:
         yield from chunk
 
 #** Classes **#
+
+class ParserError(SyntaxError):
+    """error to raise on syntax error during parsing"""
+    token:    Optional[int] = None
+    code:     Optional[bytes] = None
+    position: Optional[Tuple[int, int]] = None
+
+    def __init__(self, msg: str, result: Optional[Result] = None):
+        """generate parsing error w/ the following details"""
+        error = msg
+        if result is not None:
+            pos    = (result.lineno, result.position)
+            error += f' at {result.value.decode()!r}'
+            error += ' lineno=%d, index=%d' % pos
+            self.token    = result.token
+            self.code     = result.value
+            self.position = pos
+        super().__init__(error)
 
 @dataclass(repr=False)
 class Parser:
@@ -58,7 +76,7 @@ class Parser:
             # ensure to read tag-end for ending slash
             result = self.lexer.next()
             if result is None or result.token != Token.TAG_END:
-                raise RuntimeError('Missing Tag End', result)
+                raise ParserError('Missing Tag End', result)
             # process ending tag
             tag = tag.lstrip('/')
             self.builder.end(tag)
@@ -72,7 +90,7 @@ class Parser:
             if result is None or result.token == Token.TAG_END:
                 break
             # process token value 
-            token, value = result
+            token, value, _, _ = result
             value        = self._decode(value)
             # handle self-closed tags
             if token == Token.TAG_CLOSE:
@@ -85,7 +103,7 @@ class Parser:
             elif token == Token.ATTR_VALUE:
                 attributes[incomplete.pop()] = self.unescape(value)
                 continue
-            raise RuntimeError('Unexpected Tag Token', result)
+            raise ParserError('Unexpected Tag Token', result)
         # finalize processing for starting tag
         attributes.update({k:'true' for k in incomplete})
         if closed or (empty and tag in empty):
@@ -116,7 +134,7 @@ class Parser:
         if result is None:
             return False
         # process value from result
-        token, value = result
+        token, value, _, _ = result
         value        = self._decode(value)
         if token == Token.TAG_START:
             self.parse_tag(value)
@@ -129,7 +147,7 @@ class Parser:
         elif token == Token.INSTRUCTION:
             self.process_pi(value)
         else:
-            raise RuntimeError('Unexpected Next Token', result)
+            raise ParserError('Unexpected Next Token', result)
         return True
 
     def parse(self):

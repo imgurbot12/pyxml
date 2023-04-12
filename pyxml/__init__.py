@@ -18,8 +18,10 @@ __all__ = [
 
     'Parser',
     'FeedParser',
+    'ParserError',
 
-    'TreeBuilder'
+    'TreeBuilder',
+    'BuilderError',
 ]
 
 #** Imports **#

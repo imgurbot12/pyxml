@@ -41,10 +41,10 @@ xml = fromstring(b"""
 
 class XpathTests(unittest.TestCase):
  
-    def assertTagCount(self, children, tag, number):
+    def assertTagCount(self, elements, tag, number):
         """assert that a certain number of children match the given tag"""
-        matching = [c for c in children if c.tag == tag]
-        self.assertEqual(len(matching), number, f'{tag!r} elements != {number}')
+        matching = sum([1 for e in elements if e.tag == tag])
+        self.assertEqual(matching, number, f'{tag!r} elements != {number}')
 
     def test_child(self):
         """test simple child iteration"""

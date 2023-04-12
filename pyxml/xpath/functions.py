@@ -69,7 +69,7 @@ def compile_argument(arg: Result) -> ArgGetter:
     """compile argument collector function"""
     def getter(e: Element) -> ArgValue:
         # assign value
-        token, value = arg
+        token, value, _, _ = arg
         value        = value.decode()
         if token == EToken.VARIABLE:
             val = e.attrib.get(value, '')

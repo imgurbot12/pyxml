@@ -15,14 +15,19 @@ QUOTES = b'"\''
 #: slash character byte
 SLASH = ord('\\')
 
+#: newline character byte
+NEWLINE = ord('\n')
+
 #: typehint for data stream of single bytes
 DataStream = Iterator[int]
 
 #** Classes **#
 
 class Result(NamedTuple):
-    token: int
-    value: bytes
+    token:    int
+    value:    bytes
+    lineno:   int
+    position: int
 
 class BaseLexer:
     """
@@ -33,22 +38,33 @@ class BaseLexer:
         self.stream = stream
         self.buffer = bytearray()
         self.last_token = 0
+        self.lineno     = 1
+        self.position   = 0
 
-    def read_byte(self) -> int | None:
+    def read_byte(self) -> Optional[int]:
         """
         read next byte from array
         """
         if not self.buffer:
             try:
-                return next(self.stream)
+                char = next(self.stream)
             except StopIteration:
                 return
-        return self.buffer.pop(0)
+        else:
+            char = self.buffer.pop(0)
+        if char == NEWLINE:
+            self.lineno  += 1
+            self.position = 0
+        self.position += 1
+        return char
 
     def unread(self, *data):
         """
         unread bytes from the data-stream
         """
+        self.position -= len(data)
+        if NEWLINE in data or self.position < 0:
+            raise RuntimeError('unable to track position!')
         self.buffer.extend(data)
 
     def skip_spaces(self):

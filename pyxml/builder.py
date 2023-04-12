@@ -7,9 +7,12 @@ from typing import Dict, List, Optional, Type
 from .element import *
 
 #** Variables **#
-__all__ = ['TreeBuilder']
+__all__ = ['BuilderError', 'TreeBuilder']
 
 #** Classes **#
+
+class BuilderError(SyntaxError):
+    pass
 
 @dataclass(repr=False)
 class TreeBuilder:
@@ -40,11 +43,11 @@ class TreeBuilder:
         text = ''.join(self.text)
         if self.tail:
             if self.last.tail:
-                raise RuntimeError('Element tail already assigned')
+                raise BuilderError('Element tail already assigned')
             self.last.tail = text
         else:
             if self.last.text:
-                raise RuntimeError('Element text already assigned')
+                raise BuilderError('Element text already assigned')
             self.last.text = text
         self.text = []
 
@@ -55,6 +58,8 @@ class TreeBuilder:
             self.tree[-1].append(elem)
         elif self.root is None:
             self.root = elem
+        else:
+            raise BuilderError('more than one tree present')
 
     def _inline(self, factory, *args):
         """generate single inline element and append it to the tree"""
@@ -76,7 +81,7 @@ class TreeBuilder:
         self._flush()
         self.last = self.tree.pop()
         if self.last.tag != tag:
-            raise RuntimeError(
+            raise BuilderError(
                 f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
         self.tail = True
     
@@ -106,6 +111,8 @@ class TreeBuilder:
 
     def close(self):
         """close builder and return root element"""
-        assert len(self.tree) == self.final, 'missing end tags'
-        assert self.root is not None,        'missing toplevel element'
+        if len(self.tree) != self.final:
+            raise BuilderError(f'Missing End Tags {[e.tag for e in self.tree]}')
+        if self.root is None:
+            raise BuilderError('Missing Toplevel Element')
         return self.root

@@ -31,7 +31,7 @@ def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     compiled: EvalExpr = lambda _: False
     # modify action for integer filters
     if expr.isdigit():
-        action = Result(EToken.FUNCTION, b'index')
+        action = Result(EToken.FUNCTION, b'index', 0, 0)
     # parse expression according to lexer bytes
     while True:
         # retrieve next action in expression
@@ -39,7 +39,7 @@ def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
         if result is None:
             break
         # handle according to token
-        token, value = result
+        token, value, _, _ = result
         if token >= EToken.EQUALS:
             action = result
             continue
@@ -87,7 +87,7 @@ def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
     lexer = XLexer(iter(xpath))
     for action in lexer.iter():
         # process action according to token-type
-        token, value = action
+        token, value, _, _ = action
         if token == XToken.CHILD:
             elems = (c for e in elements for c in e)
         elif token == XToken.DECENDANT:

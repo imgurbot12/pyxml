@@ -163,9 +163,11 @@ class Lexer(BaseLexer):
 
     def _next(self) -> Result:
         """parse the next token from the raw incoming data"""
-        char  = 0
-        token = 0
-        value = bytearray()
+        char     = 0
+        token    = 0
+        value    = bytearray()
+        lineno   = self.lineno
+        position = self.position
         while True:
             char = self.read_byte()
             if char is None:
@@ -218,4 +220,4 @@ class Lexer(BaseLexer):
             self.read_instruction(value)
         elif char is not None:
             raise ValueError('invalid character?', token, chr(char))
-        return Result(token, bytes(value))
+        return Result(token, bytes(value), lineno, position)
