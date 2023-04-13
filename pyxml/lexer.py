@@ -2,6 +2,7 @@
 Xml Parser Lexer/Tokenizer
 """
 from enum import IntEnum
+from typing import Optional
 
 from ._tokenize import *
 
@@ -21,6 +22,9 @@ CLOSE_BRACK = ord(']')
 SPECIAL    = b'=<>/'
 ONLY_SLASH = b'/'
 
+SCRIPT     = b'script'
+SCRIPT_TAG = b'</script>'
+
 #** Classes **#
 
 class Token(IntEnum):
@@ -37,6 +41,10 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     
+    def __init__(self, stream: DataStream):
+        super().__init__(stream)
+        self.last_tag: Optional[bytes] = None
+
     def read_word(self, value: bytearray):
         """default terminate on XML special characters"""
         return super().read_word(value, SPECIAL) 
@@ -55,7 +63,7 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
-    
+ 
     def read_text(self, value: bytearray):
         """read buffer until text-block ends"""
         while True:
@@ -66,6 +74,19 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
+
+    def read_script(self, value: bytearray):
+        """read script tag to completion"""
+        buffer = bytearray()
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            buffer.append(char)
+            if buffer.endswith(SCRIPT_TAG):
+                value.extend(buffer[:-len(SCRIPT_TAG)])
+                self.unread(*SCRIPT_TAG)
+                break
 
     def read_comment(self, value: bytearray):
         """read until end of comment tag"""
@@ -149,7 +170,7 @@ class Lexer(BaseLexer):
                 return Token.TAG_CLOSE
         elif char == CLOSE_TAG:
             return Token.TAG_END
-        elif char == EQUALS:
+        elif char == EQUALS and self.last_token == Token.ATTR_NAME:
             self.skip_spaces()
             return Token.ATTR_VALUE
         # parse according to additional context
@@ -201,6 +222,7 @@ class Lexer(BaseLexer):
         # handle processing based on tag-type
         if token == Token.TAG_START:
             self.read_tag(value)
+            self.last_tag = value
         elif token == Token.ATTR_NAME:
             self.read_word(value)
         elif token == Token.ATTR_VALUE:
@@ -211,7 +233,10 @@ class Lexer(BaseLexer):
         elif token in (Token.TAG_END, Token.TAG_CLOSE):
             pass
         elif token == Token.TEXT:
-            self.read_text(value)
+            if self.last_tag == SCRIPT:
+                self.read_script(value)
+            else:
+                self.read_text(value)
         elif token == Token.COMMENT:
             self.read_comment(value)
         elif token == Token.DECLARATION:
