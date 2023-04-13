@@ -138,7 +138,7 @@ def index(e: Element, idx: ArgValue) -> bool:
     """XPATH integer indexing function"""
     index  = get_int(idx)
     actual = 0
-    if e.parent:
+    if e.parent is not None:
         actual = e.parent.children.index(e) + 1
     return actual == index
 

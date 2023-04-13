@@ -114,7 +114,7 @@ class Element:
         return xpath.findtext(self, path, default)
  
     def xpath(self, path: str) -> List[Self]:
-        """alias for findall to support lxml"""
+        """alias for findall for compatability with lxml"""
         return self.findall(path)
 
     def getparent(self) -> Optional[Self]:

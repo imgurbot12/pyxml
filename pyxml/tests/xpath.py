@@ -15,7 +15,7 @@ xml = fromstring(b"""
         <span class="threadLabel ">(Thread Name #1)</span>
         <article class="message-body">
             <div class="message message-main">
-                <p>Paragraph #1</p>
+                <p class="p1">Paragraph #1</p>
                 <p>This is <em>Paragraph #2</em></p>
                 <a href="https://example.com">Example Link</a>
                 <p>Final Paragraph</p>
@@ -26,7 +26,7 @@ xml = fromstring(b"""
         <span class=" threadLabel">(Thread Name #2)</span>
         <article class="message-body">
             <div class="message message-main">
-                <p>Paragraph #3</p>
+                <p class="p1">Paragraph #3</p>
                 <a href="https://example.com">Example Link #2</a>
                 <p>This is <em>Paragraph #4</em></p>
                 <p>Final Paragraph Two</p>
@@ -76,11 +76,25 @@ class XpathTests(unittest.TestCase):
         self.assertEqual(len(spans), 2)
         self.assertTagCount(spans, 'span', 2)
     
+    def test_relative_path(self):
+        """test relative path filter"""
+        spans = xml.findall('./article/span')
+        self.assertEqual(len(spans), 2)
+        self.assertTagCount(spans, 'span', 2)
+
     def test_index(self):
         """test simple xpath indexing"""
         headers = xml.findall('/[1]')
         self.assertEqual(len(headers), 1)
         self.assertTagCount(headers, 'h1', 1)
+
+    def test_notempty(self):
+        """test simple notempty variable check"""
+        pgraphs = xml.findall('//p[@class]')
+        self.assertEqual(len(pgraphs), 2)
+        self.assertTagCount(pgraphs, 'p', 2)
+        for p in pgraphs:
+            self.assertIn('class', p.attrib)
 
     def test_name(self):
         """test `name` filter"""
