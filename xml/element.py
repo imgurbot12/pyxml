@@ -1,8 +1,7 @@
 """
 XML Element/Node Definitions
 """
-from typing import Optional, List, Iterator, Any
-from typing_extensions import Self
+from ._compat import Optional, List, Iterator, Any, Self, bytes
 
 #** Variables **#
 __all__ = [

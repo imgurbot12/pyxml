@@ -1,8 +1,7 @@
 """
 XML Elements and ElementTree Implementation
 """
-
-from ._compat import Optional, Iterator, BinaryIO
+from ._compat import Optional, Iterator, BinaryIO, bytes
 
 from .element import *
 from .element import _Special
@@ -28,7 +27,8 @@ def stream_file(f: BinaryIO, chunk_size: int = 8192) -> Iterator[int]:
 
 def quote(text: bytes) -> bytes:
     """quote escape"""
-    return QUOTE + text.replace(QUOTE, b'\\"') + QUOTE
+    # return QUOTE + text.replace(QUOTE, b'\\"') + QUOTE
+    return [QUOTE] + [b'\\"' if i == QUOTE else i for i in text] + [QUOTE]
 
 def serialize_xml(f, element, short_empty_elements=False):
     """serialize xml and write into file"""

@@ -1,6 +1,7 @@
 """
 Escape/Unescape Utilities for XML Handling
 """
+from ._compat import bytes
 
 #** Variables **#
 __all__ = ['escape_cdata', 'escape_attrib', 'unescape']

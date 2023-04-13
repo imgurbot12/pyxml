@@ -1,7 +1,7 @@
 """
 XML Tree Builder Implementation
 """
-from ._compat import Dict, List, Optional
+from ._compat import Dict, List, Optional, bytes
 
 from .element import *
 from .escape import unescape
@@ -34,7 +34,7 @@ class TreeBuilder:
         self.root: Optional[Element] = root
         self.last: Optional[Element] = root
         self.tree: List[Element] = [] if root is None else [root]
-        self.text: List[bytes] = []
+        self.text: List[int] = []
         self.tail: bool = False
 
     def _flush(self):
@@ -44,7 +44,7 @@ class TreeBuilder:
         if self.last is None:
             self.text = []
             return
-        text = unescape(b''.join(self.text))
+        text = unescape(self.text)
         if self.tail:
             if self.last.tail:
                 raise RuntimeError('Element tail already assigned')
@@ -88,7 +88,7 @@ class TreeBuilder:
                 f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
         self.tail = True
 
-    def data(self, data: bytes):
+    def data(self, data: int):
         """process incoming text block"""
         self.text.append(data)
 

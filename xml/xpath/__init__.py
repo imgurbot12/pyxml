@@ -1,7 +1,7 @@
 """
 XML Xpath Query-Language Implementation
 """
-from .._compat import Iterator, Optional, List
+from .._compat import Iterator, Optional, List, bytes
 
 from .engine import iter_xpath, find_xpath, list_xpath
 from ..element import Element

@@ -2,7 +2,7 @@
 Xml Parser Lexer/Tokenizer
 """
 # from ._compat import IntEnum
-from ._compat import IntEnum
+from ._compat import IntEnum, bytearray
 
 from ._tokenize import *
 
@@ -37,9 +37,11 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     
-    def read_word(self, value: bytearray, terminate: bytes = b''):
+    def read_word(self, value: bytearray, terminate=None):
         """default terminate on XML special characters"""
-        return super().read_word(value, terminate or SPECIAL) 
+        if terminate is None:
+            terminate = []
+        return super().read_word(value, terminate or SPECIAL)
     
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""

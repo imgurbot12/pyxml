@@ -1,7 +1,7 @@
 """
 BaseClass Tokenizer Implementation for various Lexers
 """
-from ._compat import NamedTuple, Optional, Iterator, Generator
+from ._compat import NamedTuple, Optional, Iterator, Generator, bytearray
 
 #** Variables **#
 __all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']
@@ -63,10 +63,12 @@ class BaseLexer:
                 self.unread(char)
                 break
 
-    def read_word(self, value: bytearray, terminate: bytes = b''):
+    def read_word(self, value: bytearray, terminate=None):
         """
         read buffer until a space is found or special terminators
         """
+        if terminate is None:
+            terminate = []
         while True:
             char = self.read_byte()
             if char is None or char in SPACES:
