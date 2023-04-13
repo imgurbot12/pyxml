@@ -6,9 +6,8 @@ from typing import Optional, BinaryIO
 
 from .element import *
 from .element import _Special
-from .parser import FeedParser
+from .parser import Parser, BaseParser, write_parser
 from .escape import escape_cdata, escape_attrib
-from .html.parser import HTML_EMPTY
 
 #** Variables **#
 __all__ = ['tostring', 'fromstring', 'ElementTree']
@@ -28,7 +27,7 @@ def tostring(element: Element, *args, **kwargs) -> bytes:
     ElementTree(element).write(data, *args, **kwargs)
     return data.getvalue()
 
-def fromstring(text, parser: Optional[FeedParser] = None) -> Element:
+def fromstring(text, parser: Optional[BaseParser] = None) -> Element:
     """
     convert raw html bytes into valid element tree
 
@@ -36,17 +35,18 @@ def fromstring(text, parser: Optional[FeedParser] = None) -> Element:
     :param parser: parser instance to process xml string
     :return:       html element tree
     """
-    text   = text.encode() if isinstance(text, str) else text
-    parser = parser or FeedParser()
-    parser.feed(text)
+    parser = parser or Parser()
+    write_parser(parser, text)
     return parser.close()
 
 def quote(text: str) -> str:
     """quote escape"""
     return '"' + escape_attrib(text) + '"'
 
-def serialize_any(write, element, short_empty_elements, skip_end):
+def serialize_any(write, element, short_empty_elements, skip_end_tags):
     """serialize xml/html using write function"""
+    # check if element should skip-end
+    skip_end = skip_end_tags and element.tag in skip_end_tags
     # serialize special elements differently
     if isinstance(element, _Special):
         func = lambda b: b
@@ -69,7 +69,8 @@ def serialize_any(write, element, short_empty_elements, skip_end):
             write('=')
             write(quote(value))
     # close w/ short form if enabled
-    if short_empty_elements and not len(element) and not element.text:
+    if short_empty_elements and not skip_end \
+        and not len(element) and not element.text:
         write('/>')
         write(escape_cdata(element.tail or ''))
         return
@@ -77,10 +78,10 @@ def serialize_any(write, element, short_empty_elements, skip_end):
     write('>')
     write(escape_cdata(element.text or ''))
     for child in element:
-        serialize_xml(write, child, short_empty_elements)
-    write('</' + element.tag + '>')
-    if skip_end and element.tag not in skip_end:
-        write(escape_cdata(element.tail or ''))
+        serialize_any(write, child, short_empty_elements, skip_end_tags)
+    if not skip_end:
+        write('</' + element.tag + '>')
+    write(escape_cdata(element.tail or ''))
 
 def serialize_xml(write, element, short_empty_elements=False):
     """serialize xml and write into file"""
@@ -88,6 +89,7 @@ def serialize_xml(write, element, short_empty_elements=False):
 
 def serialize_html(write, element, short_empty_elements=False):
     """serialize html and write into file"""
+    from .html.parser import HTML_EMPTY
     serialize_any(write, element, short_empty_elements, HTML_EMPTY)
 
 #** Classes **#
@@ -104,14 +106,8 @@ class ElementTree:
             raise ValueError('No XML Root Element')
         return self.root
 
-    def parse(self, source: BinaryIO, parser: Optional[FeedParser] = None):
-        parser = parser or FeedParser()
-        while True:
-            chunk = source.read(8192)
-            if not chunk:
-                break
-            parser.feed(chunk)
-        self.root = parser.close()
+    def parse(self, source: BinaryIO, parser: Optional[BaseParser] = None):
+        self.root = fromstring(source, parser)
         return self.getroot()
 
     def iter(self, tag=None):

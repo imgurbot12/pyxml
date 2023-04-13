@@ -43,6 +43,9 @@ broken_xml = b"""
 #** Classes **#
 
 class ParserTests(unittest.TestCase):
+    
+    def setUp(self) -> None:
+        self.parser = Parser()
 
     def assertParseError(self, func, code, pos):
         """ensure parse error meets expectations"""
@@ -60,20 +63,20 @@ class ParserTests(unittest.TestCase):
     
     def test_broken_pi(self):
         """ensure proper exception for incomplete-pi"""
-        parser = Parser(iter(incomplete_pi))
-        self.assertRaises(ValueError, parser.parse)
+        self.parser.feed(incomplete_pi)
+        self.assertRaises(ValueError, self.parser.close)
 
     def test_broken_start_tag(self):
         """ensure proper exception for broken start-tag"""
-        parser = Parser(iter(incomplete_start_tag))
-        self.assertParseError(parser.parse, b'/p', (4, 43))
+        self.parser.feed(incomplete_start_tag)
+        self.assertParseError(self.parser.close, b'/p', (4, 43))
 
     def test_broken_end_tag(self):
         """ensure proper exception for broken start-tag"""
-        parser = Parser(iter(incomplete_end_tag))
-        self.assertParseError(parser.parse, b'p', (5, 1))
+        self.parser.feed(incomplete_end_tag)
+        self.assertParseError(self.parser.close, b'p', (5, 1))
 
     def test_unexpected_token(self):
         """ensure proper exception for unexpected token"""
-        parser = Parser(iter(broken_xml))
-        self.assertParseError(parser.parse, b'', (1, 0))
+        self.parser.feed(broken_xml)
+        self.assertParseError(self.parser.close, b'', (1, 0))

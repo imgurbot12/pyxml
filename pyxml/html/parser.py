@@ -1,18 +1,22 @@
 """
 HTML Parser Implementation (matching html.parser)
 """
-from abc import ABC
 from io import BytesIO
-from typing import Optional, Dict, Optional
+from typing import Dict
 
-from ..lexer import Lexer
-from ..parser import Parser, stream_file
+from ..parser import Parser
 from ..builder import TreeBuilder
 from ..element import Element
 from ..escape import find_charrefs, find_entityrefs
 
 #** Variables **#
-__all__ = ['HTML_EMPTY', 'HTMLParser', 'HTMLTreeParser']
+__all__ = [
+    'HTML_EMPTY', 
+
+    'BaseHTMLParser',
+    'HTMLParser', 
+    'HTMLTreeParser'
+]
 
 #: list of empty html elements stolen from python stdlib
 HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",
@@ -44,11 +48,19 @@ class TreeMiddleware(TreeBuilder):
         """no validation checks on finish by default"""
         pass
 
-class HTMLParser(Parser, ABC):
+class BaseHTMLParser(Parser):
+
+    def parse_tag(self, tag: str):
+        """process tag w/ additional handling for empty tags"""
+        super().parse_tag(tag, HTML_EMPTY)
+
+class HTMLParser(BaseHTMLParser):
 
     def __init__(self, *, convert_charefs=True):
-        self.buffer          = BytesIO()
+        super().__post_init__()
+        self.target          = TreeMiddleware(self)
         self.convert_charefs = convert_charefs
+        self.reset()
 
     def unescape(self, value: str) -> str:
         """process and unescape reference values"""
@@ -62,89 +74,47 @@ class HTMLParser(Parser, ABC):
             self.handle_entityref(match)
             value = value.replace(match, '')
         return value 
- 
-    def parse_tag(self, tag: str):
-        """process tag w/ additional handling for empty tags"""
-        super().parse_tag(tag, HTML_EMPTY)
 
     def reset(self):
         """reset parsing attributes to parse again"""
-        self.lexer: Optional[Lexer] = None
+        self.lexer  = None
+        self.buffer = BytesIO()
 
-    def feed(self, data: bytes):
-        """write data into temporary buffer before parsing"""
-        self.buffer.write(data)
-
-    def close(self):
+    def close(self) -> Element:
         """close parser and process data"""
-        self.buffer.seek(0)
-        self.lexer   = Lexer(stream_file(self.buffer))
-        self.builder = TreeMiddleware(self)
-        return self.parse()
+        return super().close()
 
     def handle_startag(self, tag: str, attrs: Dict[str, str]):
-        print('start', tag, attrs)
         pass
 
     def handle_endtag(self, tag: str):
-        print('end', tag)
         pass
 
     def handle_startendtag(self, tag, attrs):
-        print('start-end', tag, attrs)
         self.handle_startag(tag, attrs)
         self.handle_endtag(tag)
 
     def handle_data(self, data: str):
-        print(f'data {data!r}')
         pass
             
     def handle_entityref(self, name: str):
-        print(f'entityref {name!r}')
         pass
 
     def handle_charref(self, name: str):
-        print(f'charref {name!r}')
         pass
 
     def handle_comment(self, name: str):
-        print(f'comment {name!r}')
         pass
 
     def handle_decl(self, decl: str):
-        print(f'decl {decl!r}')
         pass
 
     def handle_pi(self, data: str):
-        print(f'pi {data!r}')
         pass
 
     def unknown_decl(self, data: str):
-        print(f'unknown decl {data!r}')
         pass
 
-class HTMLTreeParser(Parser):
+class HTMLTreeParser(BaseHTMLParser):
     """HTML Parser Except it actually builds an Element-Tree by default"""
- 
-    def __init__(self, 
-        builder:  Optional[TreeBuilder] = None, 
-        encoding: str                   = 'utf-8'
-    ):
-        self.buffer   = BytesIO()
-        self.builder  = builder or TreeBuilder(root=Element('document'))
-        self.encoding = encoding
-    
-    def parse_tag(self, tag: str):
-        """process tag w/ additional handling for empty tags"""
-        super().parse_tag(tag, HTML_EMPTY)
-
-    def feed(self, data: bytes):
-        """write data into temporary buffer before parsing"""
-        self.buffer.write(data)
-
-    def close(self):
-        """close parser and process data"""
-        self.buffer.seek(0)
-        self.lexer = Lexer(stream_file(self.buffer))
-        return self.parse()
-
+    pass
