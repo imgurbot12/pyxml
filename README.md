@@ -10,9 +10,13 @@ pip install pyxml3
 
 ### Advantages
 
-The primary advantage of this library over stdlib or lxml is the completeness
-of it's XPATH implementation. Additional functions and features are supported
-allowing for more complex queries and simplifying parsing efforts.
+1. The default parser ignores XML Declaration Entities avoiding 
+   most if not all XML related vulnerabilities such as 
+   [The Billion Laughs Attack](https://en.wikipedia.org/wiki/Billion_laughs_attack)
+ 
+2. Our XPATH implementation is much more complete than both xml.etree
+   and even LXML. Additional functions and features are available making
+   it easier to quickly parse complex data structures in a single line.
 
 ### Examples
 
