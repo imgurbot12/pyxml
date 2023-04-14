@@ -1,5 +1,46 @@
-Condon XML
------------
-Experimental XML Parser to Contribute to Codon stdlib.
+PyXml
+------
+Pure python3 Alternative to stdlib xml.etree with HTML support
 
-Spawned from [this issue](https://github.com/exaloop/codon/issues/314)
+### Install
+
+```
+pip install pyxml3
+```
+
+### Advantages
+
+The primary advantage of this library over stdlib or lxml is the completeness
+of it's XPATH implementation. Additional functions and features are supported
+allowing for more complex queries and simplifying parsing efforts.
+
+### Examples
+
+Standard Usage:
+
+```python
+import pyxml
+
+etree = pyxml.fromstring(b'<p>Hello World!</p>')
+for element in etree.iter():
+  print(element)
+
+with open('example.xml', 'rb') as f:
+  etree = pyxml.fromstring(f)
+  print(etree)
+```
+
+Monkey Patch:
+
+```python
+import pyxml
+pyxml.compat.monkey_patch()
+
+from xml.etree import ElementTree as ET
+
+etree = ET.fromstring('<div><p class="hello world">Hello World!</p></div>')
+for element in etree.iter():
+  print(element)
+
+print(etree.find('//p[starts-with(@class, "hello")]'))
+```

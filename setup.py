@@ -9,7 +9,7 @@ setup(
     license='MIT',
     author='Andrew Scott',
     author_email='imgurbot12@gmail.com',
-    url='https://github.com/imgurbot12/pypub',
+    url='https://github.com/imgurbot12/pyxml',
     description="Pure python3 Alternative to stdlib xml.etree with HTML support",
     long_description=readme,
     long_description_content_type="text/markdown",

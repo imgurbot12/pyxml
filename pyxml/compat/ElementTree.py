@@ -2,7 +2,7 @@
 Compatability Layer to replace `xml.etree.ElementTree`
 """
 from ..etree import ElementTree, fromstring, tostring
-from ..parser import FeedParser
+from ..parser import Parser
 from ..builder import TreeBuilder
 from ..element import Element, Comment, ProcessingInstruction
 
@@ -29,7 +29,7 @@ XML = fromstring
 PI = ProcessingInstruction
 
 #: expose feed-parser as XMLParser
-XMLParser = FeedParser
+XMLParser = Parser
 
 #** Functions **#
 
