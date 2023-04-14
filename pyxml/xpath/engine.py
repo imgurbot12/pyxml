@@ -1,6 +1,7 @@
 """
 XPATH Processing Engine
 """
+import re
 from typing import Iterator, List, Optional, Tuple
 
 from .lexer import XToken, XLexer, EToken, ELexer
@@ -14,37 +15,45 @@ __all__ = ['iter_xpath', 'find_xpath', 'list_xpath']
 #: type hint for list of argument getters
 Args = List[ArgGetter]
 
+#: regex expression to match variable string
+re_var = re.compile(r'^@\w+$')
+
 #** Functions **#
 
-def stream(data: bytes):
-    """stream bytes from bytestring for lexer"""
-    for byte in data:
-        yield byte
-
-def children(elem: Element) -> Iterator[Element]:
-    """stream children attached to the specified element"""
-    for child in elem:
-        yield child
-
-def filter_tag(elements: Iterator[Element], tag: bytes) -> Iterator[Element]:
+def filter_tag(elements: Iterator[Element], tag: str) -> Iterator[Element]:
     """only return element if it matches the specified tag"""
     for elem in elements:
         if elem.tag == tag:
             yield elem
 
+def get_parent(element: Element, parents: int) -> Optional[Element]:
+    """retrieve parent elements from orignal element"""
+    for _ in range(0, parents):
+        if element.parent is None:
+            return
+        element = element.parent
+    return element
+
 def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     """compile a valid xpath filter expression"""
-    lexer = ELexer(stream(expr))
+    # generate context for compiling expression
+    lexer = ELexer(iter(expr))
     args: Args = []
     action: Optional[Result] = None
     compiled: EvalExpr = lambda _: False
+    # modify action for special behaviors
+    if expr.isdigit():
+        action = Result(EToken.FUNCTION, b'index', 0, 0)
+    if re_var.match(expr.decode()):
+        action = Result(EToken.FUNCTION, b'isempty', 0, 0)
+    # parse expression according to lexer bytes
     while True:
         # retrieve next action in expression
         result = lexer.next()
         if result is None:
             break
         # handle according to token
-        token, value = result
+        token, value, _, _ = result
         if token >= EToken.EQUALS:
             action = result
             continue
@@ -89,24 +98,26 @@ def iter_xpath(xpath: bytes, elements: Iterator[Element]) -> Iterator[Element]:
     :param elements: elements to search for xpath components
     :return:         iterator of elements matching xpath criteria
     """
-    lexer = XLexer(stream(xpath))
+    lexer = XLexer(iter(xpath))
     for action in lexer.iter():
         # process action according to token-type
-        token, value = action
+        token, value, _, _ = action
         if token == XToken.CHILD:
-            elems = (c for e in elements for c in children(e))
+            elements = (c for e in elements for c in e)
         elif token == XToken.DECENDANT:
-            elems = (c for e in elements for c in e.iter())
+            elements = (c for e in elements for c in e.iter())
         elif token == XToken.NODE:
-            elems = (e for e in filter_tag(elements, value))
-        elif token == XToken.WILDCARD:
+            elements = (e for e in filter_tag(elements, value.decode()))
+        elif token in (XToken.WILDCARD, XToken.SELF):
             continue
+        elif token == XToken.PARENT:
+            parents  = (get_parent(e, len(value)) for e in elements)
+            elements = (p for p in parents if p is not None)  
         elif token == XToken.FILTER:
-            expr  = compile_expr_func(value)
-            elems = (e for e in elements if expr(e))
+            expr     = compile_expr_func(value)
+            elements = (e for e in elements if expr(e))
         else:
             raise ValueError('unsupported token', action)
-        elements = elems 
     return elements
 
 def find_xpath(xpath: bytes, elements: Iterator[Element]) -> Optional[Element]:

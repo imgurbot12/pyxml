@@ -2,10 +2,12 @@
 Xml Parser Lexer/Tokenizer
 """
 from enum import IntEnum
+from typing import Optional
 
 from ._tokenize import *
 
 #** Variables **#
+__all__ = ['Token', 'Lexer']
 
 OPEN_TAG    = ord('<')
 CLOSE_TAG   = ord('>')
@@ -19,6 +21,9 @@ CLOSE_BRACK = ord(']')
 
 SPECIAL    = b'=<>/'
 ONLY_SLASH = b'/'
+
+SCRIPT     = b'script'
+SCRIPT_TAG = b'</script>'
 
 #** Classes **#
 
@@ -36,9 +41,13 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     
-    def read_word(self, value: bytearray, terminate: bytes = b''):
+    def __init__(self, stream: DataStream):
+        super().__init__(stream)
+        self.last_tag: Optional[bytes] = None
+
+    def read_word(self, value: bytearray):
         """default terminate on XML special characters"""
-        return super().read_word(value, terminate or SPECIAL) 
+        return super().read_word(value, SPECIAL) 
     
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""
@@ -54,7 +63,7 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
-    
+ 
     def read_text(self, value: bytearray):
         """read buffer until text-block ends"""
         while True:
@@ -65,6 +74,19 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
+
+    def read_script(self, value: bytearray):
+        """read script tag to completion"""
+        buffer = bytearray()
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            buffer.append(char)
+            if buffer.endswith(SCRIPT_TAG):
+                value.extend(buffer[:-len(SCRIPT_TAG)])
+                self.unread(*SCRIPT_TAG)
+                break
 
     def read_comment(self, value: bytearray):
         """read until end of comment tag"""
@@ -77,7 +99,7 @@ class Lexer(BaseLexer):
                 if value:
                     buffer.append(char)
                 continue
-            if char == CLOSE_TAG:
+            if char == CLOSE_TAG and len(buffer) >= 2:
                 break
             if buffer:
                 value.extend(buffer)
@@ -110,12 +132,12 @@ class Lexer(BaseLexer):
             if char is None:
                 break
             if char in QUOTES:
+                value.append(char)
                 self.read_quote(char, value)
-                continue
-            if char == QUESTION:
+            elif char == QUESTION:
                 question = True
                 continue
-            if question:
+            elif question:
                 if char == CLOSE_TAG:
                     return
                 question = False
@@ -148,7 +170,7 @@ class Lexer(BaseLexer):
                 return Token.TAG_CLOSE
         elif char == CLOSE_TAG:
             return Token.TAG_END
-        elif char == EQUALS:
+        elif char == EQUALS and self.last_token == Token.ATTR_NAME:
             self.skip_spaces()
             return Token.ATTR_VALUE
         # parse according to additional context
@@ -162,9 +184,11 @@ class Lexer(BaseLexer):
 
     def _next(self) -> Result:
         """parse the next token from the raw incoming data"""
-        char  = 0
-        token = 0
-        value = bytearray()
+        char     = 0
+        token    = 0
+        value    = bytearray()
+        lineno   = self.lineno
+        position = self.position
         while True:
             char = self.read_byte()
             if char is None:
@@ -198,6 +222,7 @@ class Lexer(BaseLexer):
         # handle processing based on tag-type
         if token == Token.TAG_START:
             self.read_tag(value)
+            self.last_tag = value
         elif token == Token.ATTR_NAME:
             self.read_word(value)
         elif token == Token.ATTR_VALUE:
@@ -208,7 +233,10 @@ class Lexer(BaseLexer):
         elif token in (Token.TAG_END, Token.TAG_CLOSE):
             pass
         elif token == Token.TEXT:
-            self.read_text(value)
+            if self.last_tag == SCRIPT:
+                self.read_script(value)
+            else:
+                self.read_text(value)
         elif token == Token.COMMENT:
             self.read_comment(value)
         elif token == Token.DECLARATION:
@@ -217,4 +245,4 @@ class Lexer(BaseLexer):
             self.read_instruction(value)
         elif char is not None:
             raise ValueError('invalid character?', token, chr(char))
-        return Result(token, bytes(value))
+        return Result(token, bytes(value), lineno, position)

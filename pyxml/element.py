@@ -1,7 +1,7 @@
 """
 XML Element/Node Definitions
 """
-from typing import Optional, List, Iterator, Any
+from typing import Dict, Optional, List, Iterator, Any
 from typing_extensions import Self
 
 #** Variables **#
@@ -17,30 +17,35 @@ __all__ = [
 class Element:
     """XML Element Object Definition"""
 
-    def __init__(self, tag: bytes, attrib=None, **extra):
-        if attrib is None:
-            attrib = {}
+    def __init__(self, tag, attrib=None, **extra):
         self.tag = tag
-        self.attrib = {**attrib, **extra}
+        self.attrib:   Dict[str, str]    = {**(attrib or {}), **extra}
         self.parent:   Optional[Element] = None
-        self.children: List[Self] = []
-        self.text: Optional[bytes] = None
-        self.tail: Optional[bytes] = None
+        self.children: List[Self]        = []
+        self.text:     Optional[str]     = None
+        self.tail:     Optional[str]     = None
 
     def __repr__(self) -> str:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
     
     def __iter__(self) -> Iterator[Self]:
-        return (child for child in self.children)
+        return iter(self.children)
 
     def __len__(self) -> int:
         return len(self.children)
+
+    def __bool__(self):
+        raise NotImplementedError
 
     def __getitem__(self, index: int) -> Self:
         return self.children[index]
 
     def __setitem__(self, index: int, element: Self):
         self.children[index] = element
+
+    @classmethod
+    def makeelement(cls, tag, attrib):
+        return cls(tag, attrib)
 
     def insert(self, index: int, element: Self):
         self.children.insert(index, element)
@@ -63,10 +68,10 @@ class Element:
             elem.parent = None
         self.children.clear()
 
-    def get(self, key: bytes, default: Any = None):
+    def get(self, key: str, default: Any = None):
         return self.attrib.get(key, default)
 
-    def set(self, key: bytes, value: bytes):
+    def set(self, key: str, value: str):
         self.attrib[key] = value
 
     def keys(self):
@@ -92,29 +97,41 @@ class Element:
         for child in self.children:
             yield from child.itertext()
 
-    def find(self, path: bytes) -> Optional[Self]:
-        from . import xpath
+    def find(self, path: str) -> Optional[Self]:
+        """retrieve single elmement matching xpath"""
         return xpath.find(self, path)
 
-    def findall(self, path: bytes) -> List[Self]:
-        from . import xpath
+    def findall(self, path: str) -> List[Self]:
+        """retrieve all elements in list matching xpath"""
         return xpath.findall(self, path)
 
-    def finditer(self, path: bytes) -> Iterator[Self]:
-        from . import xpath
+    def finditer(self, path: str) -> Iterator[Self]:
+        """iterate all elements matching xpath"""
         return xpath.iterfind(self, path)
 
-    def findtext(self, path: bytes, default=None) -> Optional[bytes]:
-        from . import xpath
+    def findtext(self, path: str, default=None) -> Optional[str]:
+        """collect all text within elements matching xpath"""
         return xpath.findtext(self, path, default)
+ 
+    def xpath(self, path: str) -> List[Self]:
+        """alias for findall for compatability with lxml"""
+        return self.findall(path)
+
+    def getparent(self) -> Optional[Self]:
+        """retrieve parent for compatability with lxml"""
+        return self.parent
+
+    def getchildren(self) -> List[Self]:
+        """retrieve children for compatability with lxml"""
+        return self.children
 
 class _Special(Element):
     """Baseclass for special elements such as Comments and PI"""
 
-    def __init__(self, text: bytes):
+    def __init__(self, text: str):
+        super().__init__(self.__class__)
+        self.text   = text
         self._cname = self.__class__.__name__
-        super().__init__(self._cname.encode())
-        self.text = text
     
     def __repr__(self) -> str:
         return f'{self._cname}(text={self.text})'
@@ -129,4 +146,11 @@ class Declaration(_Special):
     pass
 
 class ProcessingInstruction(_Special):
-    pass
+    
+    def __init__(self, target: str, value: str):
+        super().__init__(f'{target} {value}')
+        self.target = target
+        self.value  = value
+
+#** Imports **#
+from . import xpath
