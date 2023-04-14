@@ -1,6 +1,6 @@
-PyXml
+Pyxml
 ------
-Pure python3 Alternative to stdlib xml.etree with HTML support
+Pure python3 alternative to stdlib xml.etree with HTML support
 
 ### Install
 
@@ -16,7 +16,7 @@ allowing for more complex queries and simplifying parsing efforts.
 
 ### Examples
 
-Standard Usage:
+###### Standard Usage:
 
 ```python
 import pyxml
@@ -30,7 +30,7 @@ with open('example.xml', 'rb') as f:
   print(etree)
 ```
 
-Monkey Patch:
+###### Monkey Patch:
 
 ```python
 import pyxml
@@ -42,5 +42,18 @@ etree = ET.fromstring('<div><p class="hello world">Hello World!</p></div>')
 for element in etree.iter():
   print(element)
 
-print(etree.find('//p[starts-with(@class, "hello")]'))
+print(etree.find('//p[not(isempty(text()))]'))
 ```
+
+###### HTML:
+
+```python
+import pyxml.html
+
+etree = pyxml.html.fromstring('<div><p>Hello World!</p><br></div>')
+for element in etree.iter():
+  print(element)
+
+print(etree.find('//p[notempty(text())]'))
+```
+

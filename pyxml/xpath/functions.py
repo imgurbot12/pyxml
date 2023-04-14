@@ -142,8 +142,8 @@ def index(e: Element, idx: ArgValue) -> bool:
         actual = e.parent.children.index(e) + 1
     return actual == index
 
-def isempty(_: Element, var: ArgValue) -> bool:
-    """XPATH variable isempty function"""
+def notempty(_: Element, var: ArgValue) -> bool:
+    """XPATH variable notempty function"""
     return bool(var.value)
 
 ## Node Functions
@@ -249,7 +249,7 @@ BUILTIN = {
 #: map of XPATH supported functions assigned by name
 FUNCTIONS = {
     b'index':            index,
-    b'isempty':          isempty,
+    b'notempty':         notempty,
     b'name':             name,
     b'text':             text,
     b'count':            count,

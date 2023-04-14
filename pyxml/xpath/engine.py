@@ -45,7 +45,7 @@ def compile_expr(expr: bytes) -> Tuple[Args, Optional[Result], EvalExpr]:
     if expr.isdigit():
         action = Result(EToken.FUNCTION, b'index', 0, 0)
     if re_var.match(expr.decode()):
-        action = Result(EToken.FUNCTION, b'isempty', 0, 0)
+        action = Result(EToken.FUNCTION, b'notempty', 0, 0)
     # parse expression according to lexer bytes
     while True:
         # retrieve next action in expression
