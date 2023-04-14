@@ -42,7 +42,7 @@ etree = ET.fromstring('<div><p class="hello world">Hello World!</p></div>')
 for element in etree.iter():
   print(element)
 
-print(etree.find('//p[not(isempty(text()))]'))
+print(etree.find('//p[starts-with(lower-case(text()), "hello")]'))
 ```
 
 ###### HTML:
