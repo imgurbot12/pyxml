@@ -4,7 +4,16 @@ BaseClass Tokenizer Implementation for various Lexers
 from typing import NamedTuple, Optional, Iterator, Generator
 
 #** Variables **#
-__all__ = ['SPACES', 'QUOTES', 'DataStream', 'Result', 'BaseLexer']
+__all__ = [
+    'SPACES', 
+    'QUOTES',
+    'NEWLINE',
+    'BACK_SLASH',
+
+    'DataStream', 
+    'Result', 
+    'BaseLexer',
+]
 
 #: bytearray containing valid space characters
 SPACES = b'\n\r\t '
@@ -12,11 +21,11 @@ SPACES = b'\n\r\t '
 #: bytearray containing valid quote characters
 QUOTES = b'"\''
 
-#: slash character byte
-SLASH = ord('\\')
-
 #: newline character byte
 NEWLINE = ord('\n')
+
+#: back slash character byte
+BACK_SLASH = ord('\\')
 
 #: typehint for data stream of single bytes
 DataStream = Iterator[int]
@@ -106,7 +115,7 @@ class BaseLexer:
                 if escapes % 2 == 0:
                     break
             # track escapes to know if quote is escaped or not
-            escapes = (escapes + 1) if char == SLASH else 0
+            escapes = (escapes + 1) if char == BACK_SLASH else 0
             value.append(char)
 
     def _next(self) -> Result:

@@ -22,8 +22,7 @@ CLOSE_BRACK = ord(']')
 SPECIAL    = b'=<>/'
 ONLY_SLASH = b'/'
 
-SCRIPT     = b'script'
-SCRIPT_TAG = b'</script>'
+SPECIAL_TAGS = {b'script', b'style'}
 
 #** Classes **#
 
@@ -75,17 +74,17 @@ class Lexer(BaseLexer):
                 break
             value.append(char)
 
-    def read_script(self, value: bytearray):
-        """read script tag to completion"""
+    def read_special(self, value: bytearray, end: bytes):
+        """read special style/script tag to completion"""
         buffer = bytearray()
         while True:
             char = self.read_byte()
             if char is None:
                 break
             buffer.append(char)
-            if buffer.endswith(SCRIPT_TAG):
-                value.extend(buffer[:-len(SCRIPT_TAG)])
-                self.unread(*SCRIPT_TAG)
+            if buffer.endswith(end):
+                value.extend(buffer[:-len(end)])
+                self.unread(*end)
                 break
 
     def read_comment(self, value: bytearray):
@@ -152,6 +151,7 @@ class Lexer(BaseLexer):
             char = self.read_byte()
             if char is None:
                 break
+            buffer.append(char)
             if char in SPACES:
                 continue
             elif char == find:
@@ -165,7 +165,7 @@ class Lexer(BaseLexer):
         """guess token based on a single character"""
         if char == OPEN_TAG:
             return Token.TAG_START
-        elif char == SLASH:
+        elif char == SLASH and self.last_token != Token.TAG_END:
             if self.look_ahead(CLOSE_TAG):
                 return Token.TAG_CLOSE
         elif char == CLOSE_TAG:
@@ -222,7 +222,7 @@ class Lexer(BaseLexer):
         # handle processing based on tag-type
         if token == Token.TAG_START:
             self.read_tag(value)
-            self.last_tag = value
+            self.last_tag = bytes(value)
         elif token == Token.ATTR_NAME:
             self.read_word(value)
         elif token == Token.ATTR_VALUE:
@@ -233,8 +233,9 @@ class Lexer(BaseLexer):
         elif token in (Token.TAG_END, Token.TAG_CLOSE):
             pass
         elif token == Token.TEXT:
-            if self.last_tag == SCRIPT:
-                self.read_script(value)
+            if self.last_tag in SPECIAL_TAGS:
+                end_tag = f'</{self.last_tag.decode()}>'.encode()
+                self.read_special(value, end_tag)
             else:
                 self.read_text(value)
         elif token == Token.COMMENT:
