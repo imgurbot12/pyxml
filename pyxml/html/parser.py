@@ -19,7 +19,8 @@ __all__ = [
     'HTMLTreeParser'
 ]
 
-HTML_FULL = {'style', 'scripts'}
+#: list of elements to never shorten and always write full
+HTML_FULL = {'style', 'script'}
 
 #: list of empty html elements stolen from python stdlib
 HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",

@@ -1,16 +1,39 @@
 """
 XML Element/Node Definitions
 """
-from typing import Dict, Optional, List, Iterator, Any
+from typing import Dict, Optional, List, Iterator, Any, Tuple
 from typing_extensions import Self
 
 #** Variables **#
 __all__ = [
+    'prettify',
+
     'Element', 
     'Comment', 
     'Declaration',
     'ProcessingInstruction',
 ]
+
+#** Functions **#
+
+def prettify(element: 'Element', indent: int = 2):
+    """
+    simple prettify function for xml elements
+
+    :param element: element to prettify
+    :param indent:  indent scale to use during evaluation
+    """
+    elements: List[Tuple[int, Element, bool]] = [(0, element, False)]
+    while elements:
+        level, elem, last = elements.pop(0)
+        tail_level        = level if not last else (level - 1)
+        next              = level + 1
+        elem.text = (elem.text or '').strip()
+        elem.tail = '\n' + ' ' * (tail_level * indent)
+        if elem.children:
+            elem.text = '\n' + ' ' * (next * indent) + elem.text
+        for n, child in enumerate(elem.children, 1):
+            elements.append((next, child, n == len(elem.children)))
 
 #** Classes **#
 
@@ -44,9 +67,10 @@ class Element:
         self.children[index] = element
 
     @classmethod
-    def makeelement(cls, tag, attrib):
+    def makeelement(cls, tag, attrib) -> Self:
+        """legacy support `makeelement` function"""
         return cls(tag, attrib)
-
+    
     def insert(self, index: int, element: Self):
         self.children.insert(index, element)
 
@@ -82,6 +106,25 @@ class Element:
 
     def items(self):
         return self.attrib.items()
+    
+    @classmethod
+    def new(cls, 
+        tag:      str, 
+        attrib:   Optional[Dict[str, str]] = None, 
+        text:     Optional[str] = None,
+        tail:     Optional[str] = None,
+        children: Optional[List[Self]] = None,
+    ) -> Self:
+        """customizable secondary init-func for element"""
+        element = cls(tag, attrib)
+        element.text     = text
+        element.tail     = tail
+        element.children = children or []
+        return element
+
+    def prettify(self):
+        """prettify self for self and children to have uniform spacing"""
+        prettify(self)
 
     def iter(self, tag: Optional[bytes] = None) -> Iterator[Self]:
         """iterate all children recursively from parent"""

@@ -87,6 +87,12 @@ class TreeBuilder:
 
     def end(self, tag: str):
         """process end of an existing tag and update tree"""
+        # valdiate there is any content at all
+        if not self.tree:
+            if self.fix_broken:
+                return
+            raise BuilderError(f'Unexpected End. Tree Is Empty: {tag}')
+        # validate tag ending matches tree
         self._flush()
         self.last = self.tree.pop()
         if self.last.tag != tag:
@@ -94,7 +100,8 @@ class TreeBuilder:
                 raise BuilderError(
                     f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
             # end whatever tag is missing manually before the last-tag
-            self.end(tag)
+            if any(e.tag == tag for e in self.tree):
+                return self.end(tag)
         self.tail = True
  
     def startend(self, tag: str, attrs: Dict[str, str]):
