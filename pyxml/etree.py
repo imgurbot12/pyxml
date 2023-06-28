@@ -2,7 +2,7 @@
 XML Elements and ElementTree Implementation
 """
 from io import BytesIO
-from typing import Optional, BinaryIO
+from typing import Callable, Optional, BinaryIO, Set
 
 from .element import *
 from .element import _Special
@@ -27,15 +27,16 @@ def tostring(element: Element, *args, **kwargs) -> bytes:
     ElementTree(element).write(data, *args, **kwargs)
     return data.getvalue()
 
-def fromstring(text, parser: Optional[BaseParser] = None) -> Element:
+def fromstring(text, parser: Optional[BaseParser] = None, **kwargs) -> Element:
     """
     convert raw html bytes into valid element tree
 
     :param text:   xml text content to deserialize
     :param parser: parser instance to process xml string
+    :param kwargs: kwargs to pass to parser implementation
     :return:       html element tree
     """
-    parser = parser or Parser()
+    parser = parser or Parser(**kwargs)
     write_parser(parser, text)
     return parser.close()
 
@@ -43,10 +44,17 @@ def quote(text: str) -> str:
     """quote escape"""
     return '"' + escape_attrib(text) + '"'
 
-def serialize_any(write, element, short_empty_elements, skip_end_tags):
+def serialize_any(
+    write:                Callable[[str], None], 
+    element:              Element, 
+    short_empty_elements: bool, 
+    skip_end_tags:        Set[str],
+    skip_shorten:         Set[str],
+):
     """serialize xml/html using write function"""
     # check if element should skip-end
-    skip_end = skip_end_tags and element.tag in skip_end_tags
+    skip_end   = skip_end_tags and element.tag in skip_end_tags
+    skip_short = skip_shorten and element.tag in skip_shorten
     # serialize special elements differently
     if isinstance(element, _Special):
         func = lambda b: b
@@ -69,7 +77,7 @@ def serialize_any(write, element, short_empty_elements, skip_end_tags):
             write('=')
             write(quote(value))
     # close w/ short form if enabled
-    if short_empty_elements and not skip_end \
+    if short_empty_elements and not skip_end and not skip_short \
         and not len(element) and not element.text:
         write('/>')
         write(escape_cdata(element.tail or ''))
@@ -78,19 +86,20 @@ def serialize_any(write, element, short_empty_elements, skip_end_tags):
     write('>')
     write(escape_cdata(element.text or ''))
     for child in element:
-        serialize_any(write, child, short_empty_elements, skip_end_tags)
+        serialize_any(
+            write, child, short_empty_elements, skip_end_tags, skip_shorten)
     if not skip_end:
         write('</' + element.tag + '>')
     write(escape_cdata(element.tail or ''))
 
 def serialize_xml(write, element, short_empty_elements=False):
     """serialize xml and write into file"""
-    serialize_any(write, element, short_empty_elements, {})
+    serialize_any(write, element, short_empty_elements, set(), set())
 
 def serialize_html(write, element, short_empty_elements=False):
     """serialize html and write into file"""
-    from .html.parser import HTML_EMPTY
-    serialize_any(write, element, short_empty_elements, HTML_EMPTY)
+    from .html.parser import HTML_FULL, HTML_EMPTY
+    serialize_any(write, element, short_empty_elements, HTML_EMPTY, HTML_FULL)
 
 #** Classes **#
 

@@ -11,12 +11,15 @@ from ..escape import find_charrefs, find_entityrefs
 
 #** Variables **#
 __all__ = [
+    'HTML_FULL',
     'HTML_EMPTY', 
 
     'BaseHTMLParser',
     'HTMLParser', 
     'HTMLTreeParser'
 ]
+
+HTML_FULL = {'style', 'scripts'}
 
 #: list of empty html elements stolen from python stdlib
 HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",
@@ -56,8 +59,8 @@ class BaseHTMLParser(Parser):
 
 class HTMLParser(BaseHTMLParser):
 
-    def __init__(self, *, convert_charefs=True):
-        super().__post_init__()
+    def __init__(self, *, convert_charefs=True, fix_broken: bool = False):
+        super().__post_init__(fix_broken)
         self.target          = TreeMiddleware(self)
         self.convert_charefs = convert_charefs
         self.reset()
