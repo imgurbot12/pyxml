@@ -17,6 +17,7 @@ __all__ = [
     'wrap_expr',
     'compile_action',
     'compile_argument',
+    'get_value',
 ]
 
 #: evaluation expression function
@@ -100,7 +101,9 @@ def get_value(arg: ArgValue) -> Union[bool, int, str]:
         return arg.value
     if arg.result.token == EToken.INTEGER:
         return get_int(arg)
-    return arg.value == b'true'
+    if arg.value in ('0', '1', 'true', 'false'):
+        return get_bool(arg)
+    return arg.value
 
 #** Functions **#
 
@@ -166,7 +169,7 @@ def count(e: Element, tag: ArgValue) -> int:
 
 def position(e: Element) -> int:
     """XPATH `position` function implementation"""
-    if e.parent:
+    if e.parent is not None:
         for n, elem in enumerate(e.parent.children, 0):
             if elem == e:
                 return n
@@ -228,7 +231,7 @@ def upper_case(_: Element, v: ArgValue) -> str:
 
 def last(e: Element) -> bool:
     """XPATH `last` function implementation"""
-    if e.parent:
+    if e.parent is not None:
         children = e.parent.children
         return children.index(e) == len(children) - 1
     return True

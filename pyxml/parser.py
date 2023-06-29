@@ -7,6 +7,7 @@ from abc import abstractmethod
 from io import IOBase, BytesIO
 from dataclasses import InitVar, dataclass, field
 from typing import * #type: ignore
+from typing import BinaryIO
 
 from .lexer import DataStream, Token, Lexer, Result, BaseLexer
 from .builder import TreeBuilder

@@ -132,7 +132,7 @@ class Element:
             yield self
         for child in self.children:
             yield from child.iter(tag)
-   
+ 
     def itertext(self):
         """iterate all elements with text in them and retreieve values"""
         if self.text:
@@ -140,15 +140,15 @@ class Element:
         for child in self.children:
             yield from child.itertext()
 
-    def find(self, path: str) -> Optional[Self]:
+    def find(self, path: str) -> Optional[Any]:
         """retrieve single elmement matching xpath"""
         return xpath.find(self, path)
 
-    def findall(self, path: str) -> List[Self]:
+    def findall(self, path: str) -> List[Any]:
         """retrieve all elements in list matching xpath"""
         return xpath.findall(self, path)
 
-    def finditer(self, path: str) -> Iterator[Self]:
+    def finditer(self, path: str) -> Iterator[Any]:
         """iterate all elements matching xpath"""
         return xpath.iterfind(self, path)
 

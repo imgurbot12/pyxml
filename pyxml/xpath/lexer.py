@@ -39,14 +39,15 @@ WORD = string.ascii_letters.encode() + DIGIT + b'_'
 
 class XToken(IntEnum):
     """XPath Tokens"""
-    SELF      = 1
-    PARENT    = 2
-    CHILD     = 3
-    DECENDANT = 4
-    NODE      = 5
-    WILDCARD  = 6
-    FILTER    = 7
-    FUNCTION  = 8
+    SELF       = 1
+    PARENT     = 2
+    CHILD      = 3
+    DECENDANT  = 4
+    NODE       = 5
+    WILDCARD   = 6
+    FILTER     = 7
+    FUNCTION   = 8
+    EXPRESSION = 9
 
 class EToken(IntEnum):
     """XPath Expression Tokens"""
@@ -82,6 +83,49 @@ class XLexer(BaseLexer):
                 value.append(char)
                 self.read_quote(char, value)
             value.append(char)
+ 
+    def read_expression(self, value: bytearray):
+        """
+        read toplevel expression statement
+        """
+        parens = []
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            if char in SPACES and not parens:
+                self.unread(char)
+                break
+            elif char in QUOTES:
+                value.append(char)
+                self.read_quote(char, value)
+            elif char == OPEN_PAREN:
+                parens.append(CLOSE_PAREN)
+            elif char == OPEN_BRACK:
+                parens.append(CLOSE_BRACK)
+            elif char in (CLOSE_PAREN, CLOSE_BRACK) and parens:
+                if char == parens[-1]:
+                    parens.pop()
+            value.append(char)
+
+    def expr_ahead(self) -> bool:
+        """
+        look ahead to check if an expression is present
+        """
+        found  = False
+        buffer = bytearray()
+        while True:
+            char = self.read_byte()
+            if char is None:
+                break
+            buffer.append(char)
+            if char == SLASH:
+                break
+            elif char in b'@(':
+                found = True
+                break
+        self.buffer.extend(buffer)
+        return found
 
     def _next(self) -> Result:
         """parse basic xpath syntax (avoiding filter content)"""
@@ -118,18 +162,25 @@ class XLexer(BaseLexer):
                 if char == SLASH:
                     token = XToken.DECENDANT
                     value.append(char)
-                else:
-                    self.unread(char)
+                    break
+                self.unread(char)
+                if self.expr_ahead():
+                    token = XToken.SELF
                 break
             elif token in (XToken.SELF, XToken.PARENT):
                 if char == DOT:
                     token = XToken.PARENT
                     value.append(char)
                     continue
-                else:
-                    self.unread(char)
+                self.unread(char)
                 break
             raise ValueError('invalid character?', token, chr(char))
+        # convert node to expression it cannot be a tag
+        if token == XToken.NODE and not value.isalnum():
+            token = XToken.EXPRESSION
+            self.unread(*value)
+            value.clear()
+            self.read_expression(value)
         # convert to function if ends with `()`
         if token != XToken.FILTER and value.endswith(FUNC):
             token = XToken.FUNCTION
