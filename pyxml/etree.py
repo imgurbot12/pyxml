@@ -145,7 +145,7 @@ class ElementTree:
 
         """
         encoding  = encoding or 'utf-8'
-        write     = lambda s: f.write(s.encode(encoding))
+        write     = lambda s: f.write(s.encode(encoding, 'xmlcharrefreplace'))
         serialize = serialize_xml
         if not method or method == 'xml':
             if xml_declaration:

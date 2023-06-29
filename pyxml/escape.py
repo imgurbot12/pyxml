@@ -72,11 +72,11 @@ def unescape(text: str) -> str:
     # process remaining charrefs
     for match in find_charrefs(text):
         char = match.strip('#&;')
-        if len(char) == 3 and char[0] == 'x':
-            rawchar = bytes.fromhex(char[1:])[0]
+        if len(char) % 2 == 1 and char[0] == 'x':
+            rawchar = bytes.fromhex(char[1:]).decode('latin1')
         elif not char.isdigit():
             raise ValueError('invalid charref', match)
         else:
-            rawchar = int(char)
-        text = text.replace(match, chr(rawchar))
+            rawchar = chr(int(char))
+        text = text.replace(match, rawchar)
     return text

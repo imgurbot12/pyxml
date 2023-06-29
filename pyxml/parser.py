@@ -148,16 +148,15 @@ class Parser(BaseParser):
     """
     A Very Simple XML Parser Implementation
     """
-    target:     TreeBuilder             = field(default_factory=TreeBuilder)
-    encoding:   str                     = 'utf-8'
-    fix_broken: InitVar[Optional[bool]] = None
+    target:     TreeBuilder   = field(default_factory=TreeBuilder)
+    encoding:   str           = 'utf-8'
+    fix_broken: InitVar[bool] = True
 
-    def __post_init__(self, fix_broken: Optional[bool]):
+    def __post_init__(self, fix_broken: bool):
         self.stream   = None
         self.buffer   = None
         self.lfactory = Lexer
-        if fix_broken is not None:
-            self.target.fix_broken = fix_broken
+        self.target.fix_broken = fix_broken
 
     def _decode(self, value: bytes) -> str:
         """decode value using appropriatly assigned encoding"""

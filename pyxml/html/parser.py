@@ -60,7 +60,7 @@ class BaseHTMLParser(Parser):
 
 class HTMLParser(BaseHTMLParser):
 
-    def __init__(self, *, convert_charefs=True, fix_broken: bool = False):
+    def __init__(self, *, convert_charefs=True, fix_broken: bool = True):
         super().__post_init__(fix_broken)
         self.target          = TreeMiddleware(self)
         self.convert_charefs = convert_charefs
