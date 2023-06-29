@@ -7,7 +7,8 @@ __all__ = [
     'xpath',
     'compat',
 
-    'tostring', 
+    'prettify',
+    'tostring',
     'fromstring', 
     'ElementTree', 
 
@@ -17,7 +18,6 @@ __all__ = [
     'ProcessingInstruction',
 
     'Parser',
-    'FeedParser',
     'ParserError',
 
     'TreeBuilder',

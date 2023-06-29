@@ -75,7 +75,7 @@ class XpathTests(unittest.TestCase):
         spans = xml.findall('//article/span')
         self.assertEqual(len(spans), 2)
         self.assertTagCount(spans, 'span', 2)
-    
+ 
     def test_relative_path(self):
         """test relative path filter"""
         spans = xml.findall('./article/span')
@@ -125,6 +125,40 @@ class XpathTests(unittest.TestCase):
         spans = xml.findall('//span[not(ends-with(@class, "threadLabel"))]')
         self.assertEqual(len(spans), 2)
         self.assertTagCount(spans, 'span', 2)
+
+    def test_get_text(self):
+        """test `text()` value retrieval"""
+        text = xml.findall('//h1/text()')
+        self.assertEqual(len(text), 1)
+        self.assertIsInstance(text[0], str)
+        self.assertEqual(text[0].strip(), 'Article Header')
+
+    def test_get_text_upper(self):
+        """test `upper-case(text()) value retrieval`"""
+        text = xml.findall('//h1/upper-case(text())')
+        self.assertEqual(len(text), 1)
+        self.assertIsInstance(text[0], str)
+        self.assertEqual(text[0].strip(), 'ARTICLE HEADER')
+    
+    def test_get_attr(self):
+        """test `@attribute` getter value retrieval"""
+        classes = xml.findall('//span/@class')
+        self.assertEqual(len(classes), 3)
+        self.assertEqual(classes[0], 'threadLabel ')
+        self.assertEqual(classes[1], ' threadLabel')
+        self.assertEqual(classes[2], 'footer')
+ 
+    def test_get_position(self):
+        """test `position()` getter value retrieval"""
+        pos = xml.findall('//span/position()')
+        self.assertEqual(len(pos), 3)
+        self.assertListEqual(pos, [0, 0, 3])
+
+    def test_get_expr(self):
+        """test arbitray expression getter value retrieval"""
+        finals = xml.findall('//p/contains(upper-case(text()), "FINAL")')
+        self.assertEqual(len(finals), 6)
+        self.assertListEqual(finals, [False, False, True, False, False, True])
 
 #** Init **#
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ class TreeBuilder:
     insert_comments: bool              = False
     insert_declares: bool              = False
     insert_pis:      bool              = False
+    fix_broken:      bool              = False
  
     def __post_init__(self):
         self.last:  Optional[Element] = self.root
@@ -58,6 +59,14 @@ class TreeBuilder:
             self.tree[-1].append(elem)
         elif self.root is None:
             self.root = elem
+        elif self.fix_broken:
+            # manually update root element to handle multi-document
+            newroot = Element('document')
+            newroot.text = '\n'
+            newroot.append(self.root)
+            self.root = newroot
+            self.tree.insert(0, newroot)
+            self.tree[-1].append(elem)
         else:
             raise BuilderError('more than one tree present')
 
@@ -78,13 +87,23 @@ class TreeBuilder:
 
     def end(self, tag: str):
         """process end of an existing tag and update tree"""
+        # valdiate there is any content at all
+        if not self.tree:
+            if self.fix_broken:
+                return
+            raise BuilderError(f'Unexpected End. Tree Is Empty: {tag}')
+        # validate tag ending matches tree
         self._flush()
         self.last = self.tree.pop()
         if self.last.tag != tag:
-            raise BuilderError(
-                f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
+            if not self.fix_broken:
+                raise BuilderError(
+                    f'End Tag Mismatch (Expected {self.last.tag}, Got {tag})')
+            # end whatever tag is missing manually before the last-tag
+            if any(e.tag == tag for e in self.tree):
+                return self.end(tag)
         self.tail = True
-    
+ 
     def startend(self, tag: str, attrs: Dict[str, str]):
         """process self closing tags"""
         self.start(tag, attrs)
@@ -112,7 +131,12 @@ class TreeBuilder:
     def close(self):
         """close builder and return root element"""
         if len(self.tree) != self.final:
-            raise BuilderError(f'Missing End Tags {[e.tag for e in self.tree]}')
+            if not self.fix_broken:
+                raise BuilderError(
+                    f'Missing End Tags {[e.tag for e in self.tree]}')
+            # close all incomplete tags to avoid errors
+            while len(self.tree) != self.final:
+                self.end(self.tree[-1].tag)
         if self.root is None:
             raise BuilderError('Missing Toplevel Element')
         return self.root

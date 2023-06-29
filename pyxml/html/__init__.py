@@ -36,14 +36,15 @@ def tostring(element: Element, **kwargs) -> bytes:
     kwargs.setdefault('method', 'html')
     return xml_tostring(element, **kwargs)
 
-def fromstring(text, parser: Optional[BaseParser] = None) -> Element:
+def fromstring(text, parser: Optional[BaseParser] = None, **kwargs) -> Element:
     """
     convert raw html bytes into valid element tree
 
     :param text:   xml text content to deserialize
     :param parser: parser instance to process xml string
+    :param kwargs: kwargs to pass to parser instantiation
     :return:       html element tree
     """
-    parser = parser or HTMLTreeParser()
+    parser = parser or HTMLTreeParser(**kwargs)
     write_parser(parser, text)
     return parser.close()

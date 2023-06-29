@@ -5,8 +5,9 @@ import os
 import re
 from abc import abstractmethod
 from io import IOBase, BytesIO
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import * #type: ignore
+from typing import BinaryIO
 
 from .lexer import DataStream, Token, Lexer, Result, BaseLexer
 from .builder import TreeBuilder
@@ -147,13 +148,15 @@ class Parser(BaseParser):
     """
     A Very Simple XML Parser Implementation
     """
-    target:   TreeBuilder = field(default_factory=TreeBuilder)
-    encoding: str         = 'utf-8'
+    target:     TreeBuilder   = field(default_factory=TreeBuilder)
+    encoding:   str           = 'utf-8'
+    fix_broken: InitVar[bool] = True
 
-    def __post_init__(self):
+    def __post_init__(self, fix_broken: bool):
         self.stream   = None
         self.buffer   = None
         self.lfactory = Lexer
+        self.target.fix_broken = fix_broken
 
     def _decode(self, value: bytes) -> str:
         """decode value using appropriatly assigned encoding"""
