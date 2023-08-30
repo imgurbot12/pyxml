@@ -20,11 +20,9 @@ re_var = re.compile(r'^@\w+$')
 
 #** Functions **#
 
-def filter_tag(elements: Iterator[Element], tag: str) -> Iterator[Element]:
+def filter_tag(elements: List[Element], tag: str) -> List[Element]:
     """only return element if it matches the specified tag"""
-    for elem in elements:
-        if elem.tag == tag:
-            yield elem
+    return [e for e in elements if e.tag == tag]
 
 def get_parent(element: Element, parents: int) -> Optional[Element]:
     """retrieve parent elements from orignal element"""
@@ -108,27 +106,27 @@ def iter_xpath(xpath: bytes, elems: Sequence[Element], pure: bool = False) -> It
     :return:         iterator of elements matching xpath criteria
     """
     lexer    = XLexer(iter(xpath))
-    elements = iter(elems)
-    values   = None #type: Optional[Iterator[Any]]
+    elements = list(elems)
+    values   = None #type: Optional[List[Any]]
     for action in lexer.iter():
         # process action according to token-type
         token, value, _, _ = action
         if values:
             raise ValueError('cannot traverse elemtree after expression', value)
         elif token == XToken.CHILD:
-            elements = (c for e in elements for c in e)
+            elements = [c for e in elements for c in e]
         elif token == XToken.DECENDANT:
-            elements = (c for e in elements for c in e.iter())
+            elements = [c for e in elements for c in e.iter()]
         elif token == XToken.NODE:
-            elements = (e for e in filter_tag(elements, value.decode()))
+            elements = filter_tag(elements, value.decode())
         elif token in (XToken.WILDCARD, XToken.SELF):
             continue
         elif token == XToken.PARENT:
             parents  = (get_parent(e, len(value)) for e in elements)
-            elements = (p for p in parents if p is not None)  
+            elements = [p for p in parents if p is not None]
         elif token == XToken.FILTER:
             expr     = compile_expr_func(value)
-            elements = (e for e in elements if expr(e))
+            elements = [e for e in elements if expr(e)]
         elif pure and token in (XToken.EXPRESSION, XToken.FUNCTION):
             raise ValueError(f'toplevel {token.name} disallowed', value)
         elif token == XToken.EXPRESSION:
@@ -136,14 +134,14 @@ def iter_xpath(xpath: bytes, elems: Sequence[Element], pure: bool = False) -> It
             args, action, func = compile_expr(value, False)
             # process as a getter if no action, else process like a function
             if action and func:
-                values = (func(v) for v in values)
+                values = [func(v) for v in values]
             elif not action:
                 getter = args[0]
-                values = (get_value(getter(v)) for v in values)
+                values = [get_value(getter(v)) for v in values]
         elif token == XToken.FUNCTION:
             values = elements if values is None else values
             expr   = compile_expr_func(value)
-            values = (expr(v) for v in values)
+            values = [expr(v) for v in values]
         else:
             raise ValueError('unsupported token', action)
-    return values or elements
+    return iter(values or elements)
