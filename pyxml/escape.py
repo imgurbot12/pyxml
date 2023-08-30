@@ -30,6 +30,7 @@ ESCAPE_CDATA = {
 ESCAPE_ATTRIB = {
     **ESCAPE_CDATA,
     '"':  '&quot;',
+    ' ':  '&nbsp;',
     '\r': '&#13;',
     '\n': '&#10;',
     '\t': '&#09;',

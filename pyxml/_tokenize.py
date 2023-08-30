@@ -74,7 +74,7 @@ class BaseLexer:
         self.position -= len(data)
         if NEWLINE in data or self.position < 0:
             raise RuntimeError('unable to track position!')
-        self.buffer.extend(data)
+        self.buffer = bytearray(data) + self.buffer
 
     def skip_spaces(self):
         """

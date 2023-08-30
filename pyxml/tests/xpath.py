@@ -40,7 +40,7 @@ xml = fromstring(b"""
 #** Classes **#
 
 class XpathTests(unittest.TestCase):
- 
+
     def assertTagCount(self, elements, tag, number):
         """assert that a certain number of children match the given tag"""
         matching = sum([1 for e in elements if e.tag == tag])
@@ -159,6 +159,12 @@ class XpathTests(unittest.TestCase):
         finals = xml.findall('//p/contains(upper-case(text()), "FINAL")')
         self.assertEqual(len(finals), 6)
         self.assertListEqual(finals, [False, False, True, False, False, True])
+ 
+    def test_complex_child(self):
+        """test complex child retrieval works as intended"""
+        children = xml.findall('//article[@class="message-body"]/[1]/p[contains(text(), "Final")]')
+        self.assertEqual(len(children), 2)
+        self.assertTagCount(children, 'p', 2)
 
 #** Init **#
 if __name__ == '__main__':

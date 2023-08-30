@@ -121,7 +121,9 @@ class XLexer(BaseLexer):
             buffer.append(char)
             if char == SLASH:
                 break
-            elif char in b'@(':
+            elif len(buffer) > 1 and char == OPEN_BRACK:
+                break
+            elif char in b'\'"@(':
                 found = True
                 break
         self.buffer.extend(buffer)
@@ -175,12 +177,19 @@ class XLexer(BaseLexer):
                 self.unread(char)
                 break
             raise ValueError('invalid character?', token, chr(char))
-        # convert node to expression it cannot be a tag
+        # convert node to expression/filter it cannot be a tag
         if token == XToken.NODE and not value.isalnum():
-            token = XToken.EXPRESSION
             self.unread(*value)
             value.clear()
-            self.read_expression(value)
+            # read first byte to determine filter/expression
+            char = self.read_byte()
+            if char == OPEN_BRACK:
+                token = XToken.FILTER
+                self.read_filter(value)
+            else:
+                self.unread(char)
+                token = XToken.EXPRESSION
+                self.read_expression(value)
         # convert to function if ends with `()`
         if token != XToken.FILTER and value.endswith(FUNC):
             token = XToken.FUNCTION
