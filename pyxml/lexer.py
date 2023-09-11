@@ -39,6 +39,7 @@ class Token(IntEnum):
     TEXT        = 9
 
 class Lexer(BaseLexer):
+    __slots__ = ('last_tag', 'fix_broken')
     
     def __init__(self, stream: DataStream):
         super().__init__(stream)
@@ -47,7 +48,7 @@ class Lexer(BaseLexer):
     def read_word(self, value: bytearray):
         """default terminate on XML special characters"""
         return super().read_word(value, SPECIAL) 
-    
+ 
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""
         while True:
@@ -181,6 +182,14 @@ class Lexer(BaseLexer):
             value.append(char)
             return Token.ATTR_NAME
         return Token.UNDEFINED
+ 
+    def handle_text(self, value: bytearray):
+        """handle text parsing when value is text"""
+        if self.last_tag in SPECIAL_TAGS:
+            end_tag = f'</{self.last_tag.decode()}>'.encode()
+            self.read_special(value, end_tag)
+        else:
+            self.read_text(value)
 
     def _next(self) -> Result:
         """parse the next token from the raw incoming data"""
@@ -222,7 +231,14 @@ class Lexer(BaseLexer):
         # handle processing based on tag-type
         if token == Token.TAG_START:
             self.read_tag(value)
-            self.last_tag = bytes(value)
+            # correct for invalid tags
+            if all(c in SPECIAL for c in value):
+                token = Token.TEXT
+                value.insert(0, OPEN_TAG)
+                value.append(ord(' '))
+                self.handle_text(value) 
+            else:
+                self.last_tag = bytes(value)
         elif token == Token.ATTR_NAME:
             self.read_word(value)
         elif token == Token.ATTR_VALUE:
@@ -233,11 +249,7 @@ class Lexer(BaseLexer):
         elif token in (Token.TAG_END, Token.TAG_CLOSE):
             pass
         elif token == Token.TEXT:
-            if self.last_tag in SPECIAL_TAGS:
-                end_tag = f'</{self.last_tag.decode()}>'.encode()
-                self.read_special(value, end_tag)
-            else:
-                self.read_text(value)
+            self.handle_text(value) 
         elif token == Token.COMMENT:
             self.read_comment(value)
         elif token == Token.DECLARATION:

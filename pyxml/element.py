@@ -39,6 +39,7 @@ def prettify(element: 'Element', indent: int = 2):
 
 class Element:
     """XML Element Object Definition"""
+    __slots__ = ('tag', 'attrib', 'parent', 'children', 'text', 'tail')
 
     def __init__(self, tag, attrib=None, **extra):
         self.tag = tag
@@ -143,6 +144,13 @@ class Element:
     def find(self, path: str) -> Optional[Any]:
         """retrieve single elmement matching xpath"""
         return xpath.find(self, path)
+ 
+    def must_find(self, path: str) -> Any:
+        """retrieve single element or item from xpath"""
+        match = self.find(path)
+        if match is None:
+            raise KeyError(f'No Such Element At Xpath: {path!r}')
+        return match
 
     def findall(self, path: str) -> List[Any]:
         """retrieve all elements in list matching xpath"""

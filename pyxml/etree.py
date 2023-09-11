@@ -27,16 +27,18 @@ def tostring(element: Element, *args, **kwargs) -> bytes:
     ElementTree(element).write(data, *args, **kwargs)
     return data.getvalue()
 
-def fromstring(text, parser: Optional[BaseParser] = None, **kwargs) -> Element:
+def fromstring(text, parser: Optional[BaseParser] = None,
+    fix_broken: bool = True, **kwargs) -> Element:
     """
-    convert raw html bytes into valid element tree
+    convert raw xml bytes into valid element tree
 
-    :param text:   xml text content to deserialize
-    :param parser: parser instance to process xml string
-    :param kwargs: kwargs to pass to parser implementation
-    :return:       html element tree
+    :param text:       xml text content to deserialize
+    :param parser:     parser instance to process xml string
+    :param fix_broken: ignore or attempt to repair broken xml
+    :param kwargs:     kwargs to pass to parser implementation
+    :return:           html element tree
     """
-    parser = parser or Parser(**kwargs)
+    parser = parser or Parser(fix_broken=fix_broken, **kwargs)
     write_parser(parser, text)
     return parser.close()
 

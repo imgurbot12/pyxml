@@ -31,6 +31,7 @@ HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",
 
 class TreeMiddleware(TreeBuilder):
     """custom middleware to bridge TreeBuilder w/ HTMLParser"""
+    __slots__ = ('parser', 'start', 'end', 'startend', 'date', 'comment', 'pi')
 
     def __init__(self, parser: 'HTMLParser'):
         self.parser   = parser
@@ -59,9 +60,10 @@ class BaseHTMLParser(Parser):
         super().parse_tag(tag, HTML_EMPTY)
 
 class HTMLParser(BaseHTMLParser):
+    __slots__ = ('fix_broken', 'target', 'convert_charefs')
 
     def __init__(self, *, convert_charefs=True, fix_broken: bool = True):
-        super().__post_init__(fix_broken)
+        self.fix_broken      = fix_broken
         self.target          = TreeMiddleware(self)
         self.convert_charefs = convert_charefs
         self.reset()

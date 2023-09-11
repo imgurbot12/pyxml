@@ -42,6 +42,7 @@ class BaseLexer:
     """
     BaseClass Instance of Tokenizer Implementation
     """
+    __slots__ = ('stream', 'buffer', 'last_token', 'lineno', 'position')
 
     def __init__(self, stream: DataStream):
         self.stream = stream

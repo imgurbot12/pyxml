@@ -44,10 +44,16 @@ class TreeBuilder:
         text = ''.join(self.text)
         if self.tail:
             if self.last.tail:
+                if self.fix_broken:
+                    self.last.tail += text
+                    return
                 raise BuilderError('Element tail already assigned')
             self.last.tail = text
         else:
             if self.last.text:
+                if self.fix_broken:
+                    self.last.text += text
+                    return
                 raise BuilderError('Element text already assigned')
             self.last.text = text
         self.text = []

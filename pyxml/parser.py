@@ -71,6 +71,8 @@ class ParserError(SyntaxError):
         super().__init__(error)
 
 class BaseParser(Protocol):
+    __slots__ = ('target', 'stream', 'buffer', 'lexer', 'lfactory')
+
     target:   TreeBuilder
     stream:   Optional[DataStream]
     buffer:   Optional[IOBase]
@@ -150,7 +152,7 @@ class Parser(BaseParser):
     """
     target:     TreeBuilder   = field(default_factory=TreeBuilder)
     encoding:   str           = 'utf-8'
-    fix_broken: InitVar[bool] = True
+    fix_broken: InitVar[bool] = False
 
     def __post_init__(self, fix_broken: bool):
         self.stream   = None
@@ -161,7 +163,7 @@ class Parser(BaseParser):
     def _decode(self, value: bytes) -> str:
         """decode value using appropriatly assigned encoding"""
         return value.decode(self.encoding)
-    
+
     def unescape(self, value: str) -> str:
         """unescape the specified value if enabled"""
         return unescape(value)
@@ -172,7 +174,7 @@ class Parser(BaseParser):
         """
         # ensure lexer is assigned
         if self.lexer is None:
-            raise RuntimeError('lexer nexver assigned')
+            raise RuntimeError('lexer never assigned')
         # if the tag is an end-tag skip further processing
         end = tag.startswith('/')
         if end:
