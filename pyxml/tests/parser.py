@@ -66,6 +66,15 @@ edgecase_script = b"""
 </document>
 """
 
+edgecase_comment = b"""
+<document>
+    <head>Title</head><!---->
+    <body>
+        <div>Content!</div>
+    </body>
+</document>
+"""
+
 #** Functions **#
 
 def text(e: Element) -> str:
@@ -155,3 +164,14 @@ class ParserTests(unittest.TestCase):
                 Element.new('script', {'type': 'text/javascript', 'src': '/test.js'}),
                 Element.new('script', {'type': 'text/javascript'}, text='console.log("<<\\"<><>{}[]))");')
         ]))
+
+    def test_edgecase_comment(self):
+        """ensure special instaclose comment edgecase does not raise errors"""
+        self.assertTree(edgecase_comment,
+            Element.new('document', children=[
+                Element.new('head', text='Title'),
+                Element.new('body', children=[
+                    Element.new('div', text='Content!')
+                ])
+            ])
+        )

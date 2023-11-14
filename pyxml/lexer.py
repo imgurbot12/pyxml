@@ -105,6 +105,9 @@ class Lexer(BaseLexer):
                 value.extend(buffer)
                 buffer.clear()
             value.append(char)
+        #NOTE: remove initial - allowed into value buffer
+        if value[0] == '-':
+            value.pop(0)
 
     def read_delcaration(self, value: bytearray):
         """read declaration string"""
@@ -219,7 +222,7 @@ class Lexer(BaseLexer):
                 if char == QUESTION:
                     token = Token.INSTRUCTION
                     continue
-            if char == DASH and token in (Token.DECLARATION, Token.COMMENT):
+            if char == DASH and token == Token.DECLARATION:
                 token = Token.COMMENT
                 continue
             # append character save for certain exceptions
@@ -232,7 +235,7 @@ class Lexer(BaseLexer):
         if token == Token.TAG_START:
             self.read_tag(value)
             # correct for invalid tags
-            if all(c in SPECIAL for c in value):
+            if all(c in SPECIAL for c in value) or value.startswith(b' '):
                 token = Token.TEXT
                 value.insert(0, OPEN_TAG)
                 value.append(ord(' '))
