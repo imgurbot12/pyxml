@@ -150,15 +150,16 @@ class Parser(BaseParser):
     """
     A Very Simple XML Parser Implementation
     """
-    target:     TreeBuilder   = field(default_factory=TreeBuilder)
-    encoding:   str           = 'utf-8'
-    fix_broken: InitVar[bool] = False
+    target:     TreeBuilder      = field(default_factory=TreeBuilder)
+    encoding:   str              = 'utf-8'
+    fix_broken: bool             = False
+    error:      Optional[Result] = None
 
-    def __post_init__(self, fix_broken: bool):
+    def __post_init__(self):
         self.stream   = None
         self.buffer   = None
         self.lfactory = Lexer
-        self.target.fix_broken = fix_broken
+        self.target.fix_broken = self.fix_broken
 
     def _decode(self, value: bytes) -> str:
         """decode value using appropriatly assigned encoding"""
@@ -196,7 +197,7 @@ class Parser(BaseParser):
                 break
             # process token value 
             token, value, _, _ = result
-            value        = self._decode(value)
+            value = self._decode(value)
             # handle self-closed tags
             if token == Token.TAG_CLOSE:
                 closed = True
@@ -208,6 +209,10 @@ class Parser(BaseParser):
             elif token == Token.ATTR_VALUE:
                 attributes[incomplete.pop()] = self.unescape(value)
                 continue
+            elif self.fix_broken and token == Token.TAG_START:
+                self.error = result
+                closed = True
+                break
             raise ParserError('Unexpected Tag Token', result)
         # finalize processing for starting tag
         attributes.update({k:'true' for k in incomplete})
@@ -239,10 +244,11 @@ class Parser(BaseParser):
         if self.lexer is None:
             raise RuntimeError('lexer nexver assigned')
         # retrieve next token to parse
-        result = self.lexer.next()
+        result = self.error or self.lexer.next()
         if result is None:
             return False
         # process value from result
+        self.error = None
         token, value, _, _ = result
         value        = self._decode(value)
         if token == Token.TAG_START:

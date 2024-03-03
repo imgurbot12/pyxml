@@ -40,14 +40,24 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     __slots__ = ('last_tag', 'fix_broken')
-    
-    def __init__(self, stream: DataStream):
+ 
+    def __init__(self, stream: DataStream, fix_broken=False):
         super().__init__(stream)
         self.last_tag: Optional[bytes] = None
+        self.fix_broken = fix_broken
 
-    def read_word(self, value: bytearray):
-        """default terminate on XML special characters"""
-        return super().read_word(value, SPECIAL) 
+    def read_word(self, value: bytearray, terminate = None):
+        """
+        read buffer until space or a special XML character arises
+        """
+        while True:
+            char = self.read_byte()
+            if char is None or char in SPACES:
+                break
+            if char in SPECIAL:
+                self.unread(char)
+                break
+            value.append(char)
  
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""
@@ -244,6 +254,10 @@ class Lexer(BaseLexer):
                 self.last_tag = bytes(value)
         elif token == Token.ATTR_NAME:
             self.read_word(value)
+            # correct for broken attributes
+            if value and value[-1] == CLOSE_TAG:
+                value = value[:-1]
+                self.unread(CLOSE_TAG)
         elif token == Token.ATTR_VALUE:
             if char and char in QUOTES:
                 self.read_quote(char, value)

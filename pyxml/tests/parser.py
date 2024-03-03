@@ -40,6 +40,12 @@ broken_xml = b"""
 </document>
 """
 
+bad_attributes = b"""
+<document>
+  <p attr="a"b" c" d></p>
+</document>
+"""
+
 edgecase_slashes = b"""
 <document>
     <p class="abc">/</p>/
@@ -137,6 +143,17 @@ class ParserTests(unittest.TestCase):
         self.parser.feed(broken_xml)
         self.assertParseError(self.parser.close, b'', (1, 0))
 
+    def test_bad_attributes(self):
+        """ensure lexer can process inappropriate attribute assignment"""
+        self.assertTree(bad_attributes, 
+            Element.new('document', children=[
+                Element.new('p', {
+                    'attr': 'a', 
+                    'b':    'true', 
+                    'c':    'true', 
+                    'd':    'true'})
+        ]))
+
     def test_edgecase_slashes(self):
         """ensure slashes edgecase does not raise errors"""
         self.assertTree(edgecase_slashes, 
@@ -144,7 +161,6 @@ class ParserTests(unittest.TestCase):
                 Element.new('p', {'class': 'abc'}, text='/', tail='/'),
                 Element.new('h1', text='/Content'),
         ]))
-    
 
     def test_edgecase_style(self):
         """ensure special styles tag edgecase does not raise errors"""
