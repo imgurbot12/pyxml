@@ -47,7 +47,7 @@ def findall(elem: Element, path: str, namespaces=None) -> List[Any]:
 def findtext(elem: Element, path: str, default=None, namespaces=None) -> Optional[str]:
     """
     retrieve text from first element match of xpath
-    
+
     :param elem: root element to search xpath from
     :param path: raw xpath expression
     :return:     text from first element found matching criteria

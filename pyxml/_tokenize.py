@@ -5,13 +5,13 @@ from typing import NamedTuple, Optional, Iterator, Generator
 
 #** Variables **#
 __all__ = [
-    'SPACES', 
+    'SPACES',
     'QUOTES',
     'NEWLINE',
     'BACK_SLASH',
 
-    'DataStream', 
-    'Result', 
+    'DataStream',
+    'Result',
     'BaseLexer',
 ]
 

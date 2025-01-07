@@ -35,7 +35,7 @@ XMLParser = Parser
 
 def SubElement(parent, tag, attrib=None, **extra):
     """
-    generate sub element of parent 
+    generate sub element of parent
     """
     attrib = {**(attrib or {}), **extra}
     element = parent.makeelement(tag, attrib)

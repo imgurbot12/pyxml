@@ -92,7 +92,7 @@ def tail(e: Element) -> str:
 #** Classes **#
 
 class ParserTests(unittest.TestCase):
- 
+
     def setUp(self) -> None:
         self.parser = Parser()
 
@@ -109,7 +109,7 @@ class ParserTests(unittest.TestCase):
             self.fail('function did not raise expected error')
         self.assertEqual(error.code, code)
         self.assertEqual(error.position, pos)
- 
+
     def assertTree(self, xml: bytes, document: Element):
         """ensure trees are exactly as expected"""
         self.parser.feed(xml)
@@ -145,18 +145,18 @@ class ParserTests(unittest.TestCase):
 
     def test_bad_attributes(self):
         """ensure lexer can process inappropriate attribute assignment"""
-        self.assertTree(bad_attributes, 
+        self.assertTree(bad_attributes,
             Element.new('document', children=[
                 Element.new('p', {
-                    'attr': 'a', 
-                    'b':    'true', 
-                    'c':    'true', 
+                    'attr': 'a',
+                    'b':    'true',
+                    'c':    'true',
                     'd':    'true'})
         ]))
 
     def test_edgecase_slashes(self):
         """ensure slashes edgecase does not raise errors"""
-        self.assertTree(edgecase_slashes, 
+        self.assertTree(edgecase_slashes,
             Element.new('document', children=[
                 Element.new('p', {'class': 'abc'}, text='/', tail='/'),
                 Element.new('h1', text='/Content'),
@@ -164,7 +164,7 @@ class ParserTests(unittest.TestCase):
 
     def test_edgecase_style(self):
         """ensure special styles tag edgecase does not raise errors"""
-        self.assertTree(edgecase_style, 
+        self.assertTree(edgecase_style,
             Element.new('document', children=[
                 Element.new('head', children=[
                     Element.new('title', text='Title'),
@@ -174,7 +174,7 @@ class ParserTests(unittest.TestCase):
 
     def test_edgecase_script(self):
         """ensure special script tag edgecase does not raise errors"""
-        self.assertTree(edgecase_script, 
+        self.assertTree(edgecase_script,
             Element.new('document', children=[
                 Element.new('h1', text='Script Below'),
                 Element.new('script', {'type': 'text/javascript', 'src': '/test.js'}),

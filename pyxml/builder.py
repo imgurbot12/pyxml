@@ -26,7 +26,7 @@ class TreeBuilder:
     insert_declares: bool              = False
     insert_pis:      bool              = False
     fix_broken:      bool              = False
- 
+
     def __post_init__(self):
         self.last:  Optional[Element] = self.root
         self.tree:  List[Element]     = [] if self.root is None else [self.root]
@@ -109,7 +109,7 @@ class TreeBuilder:
             if any(e.tag == tag for e in self.tree):
                 return self.end(tag)
         self.tail = True
- 
+
     def startend(self, tag: str, attrs: Dict[str, str]):
         """process self closing tags"""
         self.start(tag, attrs)

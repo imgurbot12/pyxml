@@ -10,8 +10,8 @@ from ..etree import tostring as xml_tostring
 
 #** Variables **#
 __all__ = [
-    'tostring', 
-    'fromstring', 
+    'tostring',
+    'fromstring',
 
     'HtmlElement',
 

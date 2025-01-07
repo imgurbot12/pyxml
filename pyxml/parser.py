@@ -78,7 +78,7 @@ class BaseParser(Protocol):
     buffer:   Optional[IOBase]
     lexer:    Optional[Lexer]
     lfactory: Type[BaseLexer]
- 
+
     def set_stream(self, stream: DataStream):
         """
         set parser stream directly
@@ -108,7 +108,7 @@ class BaseParser(Protocol):
     def readfrom(self, file: IOBase):
         """
         replace memory buffer with file source
-        
+
         :param file: file to replace internal read-buffer with
         """
         if self.stream is not None:
@@ -119,7 +119,7 @@ class BaseParser(Protocol):
             elif self.buffer.tell() != 0:
                 raise RuntimeError('memory buffer already in use')
         self.buffer = file
- 
+
     @abstractmethod
     def next(self) -> bool:
         """
@@ -195,7 +195,7 @@ class Parser(BaseParser):
             result = self.lexer.next()
             if result is None or result.token == Token.TAG_END:
                 break
-            # process token value 
+            # process token value
             token, value, _, _ = result
             value = self._decode(value)
             # handle self-closed tags
@@ -228,7 +228,7 @@ class Parser(BaseParser):
     def process_pi(self, pi: str):
         """
         process pi-data and check for valid encoding
-        """ 
+        """
         # process instruction to find specified encoding
         target, value = pi.split(' ', 1)
         if target == 'xml':

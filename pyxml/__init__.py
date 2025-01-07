@@ -9,8 +9,8 @@ __all__ = [
 
     'prettify',
     'tostring',
-    'fromstring', 
-    'ElementTree', 
+    'fromstring',
+    'ElementTree',
 
     'Element',
     'Comment',

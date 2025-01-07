@@ -16,7 +16,7 @@ class BuilderTests(unittest.TestCase):
     def setUp(self) -> None:
         """setup builder for each test-case"""
         self.builder = TreeBuilder()
- 
+
     def assertTags(self, root: Element, tags: List[str]):
         """assert iterated tags from root match expected"""
         elements = list(root.iter())
@@ -38,7 +38,7 @@ class BuilderTests(unittest.TestCase):
         """ensure error is raised on incomplete document"""
         self.builder.start('document', {})
         self.assertRaises(BuilderError, self.builder.close)
- 
+
     def test_empty_tree(self):
         """ensure error is raised when ending on an empty tree"""
         self.builder.start('ul', {})

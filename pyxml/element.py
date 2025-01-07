@@ -8,8 +8,8 @@ from typing_extensions import Self
 __all__ = [
     'prettify',
 
-    'Element', 
-    'Comment', 
+    'Element',
+    'Comment',
     'Declaration',
     'ProcessingInstruction',
 ]
@@ -51,7 +51,7 @@ class Element:
 
     def __repr__(self) -> str:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
-    
+
     def __iter__(self) -> Iterator[Self]:
         return iter(self.children)
 
@@ -71,7 +71,7 @@ class Element:
     def makeelement(cls, tag, attrib) -> Self:
         """legacy support `makeelement` function"""
         return cls(tag, attrib)
-    
+
     def insert(self, index: int, element: Self):
         self.children.insert(index, element)
 
@@ -107,11 +107,11 @@ class Element:
 
     def items(self):
         return self.attrib.items()
-    
+
     @classmethod
-    def new(cls, 
-        tag:      str, 
-        attrib:   Optional[Dict[str, str]] = None, 
+    def new(cls,
+        tag:      str,
+        attrib:   Optional[Dict[str, str]] = None,
         text:     Optional[str] = None,
         tail:     Optional[str] = None,
         children: Optional[List[Self]] = None,
@@ -133,7 +133,7 @@ class Element:
             yield self
         for child in self.children:
             yield from child.iter(tag)
- 
+
     def itertext(self):
         """iterate all elements with text in them and retreieve values"""
         if self.text:
@@ -144,7 +144,7 @@ class Element:
     def find(self, path: str) -> Optional[Any]:
         """retrieve single elmement matching xpath"""
         return xpath.find(self, path)
- 
+
     def must_find(self, path: str) -> Any:
         """retrieve single element or item from xpath"""
         match = self.find(path)
@@ -163,7 +163,7 @@ class Element:
     def findtext(self, path: str, default=None) -> Optional[str]:
         """collect all text within elements matching xpath"""
         return xpath.findtext(self, path, default)
- 
+
     def xpath(self, path: str) -> List[Self]:
         """alias for findall for compatability with lxml"""
         return self.findall(path)
@@ -183,7 +183,7 @@ class _Special(Element):
         super().__init__(self.__class__)
         self.text   = text
         self._cname = self.__class__.__name__
-    
+
     def __repr__(self) -> str:
         return f'{self._cname}(text={self.text})'
 
@@ -197,7 +197,7 @@ class Declaration(_Special):
     pass
 
 class ProcessingInstruction(_Special):
-    
+
     def __init__(self, target: str, value: str):
         super().__init__(f'{target} {value}')
         self.target = target

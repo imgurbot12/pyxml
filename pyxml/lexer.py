@@ -40,7 +40,7 @@ class Token(IntEnum):
 
 class Lexer(BaseLexer):
     __slots__ = ('last_tag', 'fix_broken')
- 
+
     def __init__(self, stream: DataStream, fix_broken=False):
         super().__init__(stream)
         self.last_tag: Optional[bytes] = None
@@ -58,7 +58,7 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
- 
+
     def read_tag(self, value: bytearray):
         """read buffer until a tag name is found"""
         while True:
@@ -73,7 +73,7 @@ class Lexer(BaseLexer):
                 self.unread(char)
                 break
             value.append(char)
- 
+
     def read_text(self, value: bytearray):
         """read buffer until text-block ends"""
         while True:
@@ -195,7 +195,7 @@ class Lexer(BaseLexer):
             value.append(char)
             return Token.ATTR_NAME
         return Token.UNDEFINED
- 
+
     def handle_text(self, value: bytearray):
         """handle text parsing when value is text"""
         if self.last_tag in SPECIAL_TAGS:
@@ -249,7 +249,7 @@ class Lexer(BaseLexer):
                 token = Token.TEXT
                 value.insert(0, OPEN_TAG)
                 value.append(ord(' '))
-                self.handle_text(value) 
+                self.handle_text(value)
             else:
                 self.last_tag = bytes(value)
         elif token == Token.ATTR_NAME:
@@ -266,7 +266,7 @@ class Lexer(BaseLexer):
         elif token in (Token.TAG_END, Token.TAG_CLOSE):
             pass
         elif token == Token.TEXT:
-            self.handle_text(value) 
+            self.handle_text(value)
         elif token == Token.COMMENT:
             self.read_comment(value)
         elif token == Token.DECLARATION:

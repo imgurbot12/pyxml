@@ -79,7 +79,7 @@ def compile_expr_args(expr: bytes, pure: bool = True) -> Args:
     args, action, _ = compile_expr(expr, pure)
     if action:
         raise ValueError('invalid arguments', action, args)
-    return args 
+    return args
 
 def compile_expr_func(expr: bytes, pure: bool = True) -> EvalExpr:
     """compile a complete filter expression into a single function"""

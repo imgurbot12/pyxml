@@ -83,7 +83,7 @@ class XLexer(BaseLexer):
                 value.append(char)
                 self.read_quote(char, value)
             value.append(char)
- 
+
     def read_expression(self, value: bytearray):
         """
         read toplevel expression statement

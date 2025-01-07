@@ -47,9 +47,9 @@ def quote(text: str) -> str:
     return '"' + escape_attrib(text) + '"'
 
 def serialize_any(
-    write:                Callable[[str], None], 
-    element:              Element, 
-    short_empty_elements: bool, 
+    write:                Callable[[str], None],
+    element:              Element,
+    short_empty_elements: bool,
     skip_end_tags:        Set[str],
     skip_shorten:         Set[str],
 ):
@@ -129,7 +129,7 @@ class ElementTree:
 
     def findall(self, path: str):
         return self.getroot().findall(path)
-    
+
     def finditer(self, path: str):
         return self.getroot().finditer(path)
 

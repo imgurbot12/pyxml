@@ -12,10 +12,10 @@ from ..escape import find_charrefs, find_entityrefs
 #** Variables **#
 __all__ = [
     'HTML_FULL',
-    'HTML_EMPTY', 
+    'HTML_EMPTY',
 
     'BaseHTMLParser',
-    'HTMLParser', 
+    'HTMLParser',
     'HTMLTreeParser'
 ]
 
@@ -41,7 +41,7 @@ class TreeMiddleware(TreeBuilder):
         self.data     = parser.handle_data
         self.comment  = lambda text: parser.handle_comment(text)
         self.pi       = lambda target, pi: parser.handle_pi(f'{target} {pi}')
- 
+
     def declaration(self, declaration: str):
         """process declaration according to type"""
         if declaration.lower().startswith('doctype'):
@@ -79,7 +79,7 @@ class HTMLParser(BaseHTMLParser):
         for match in find_entityrefs(value):
             self.handle_entityref(match)
             value = value.replace(match, '')
-        return value 
+        return value
 
     def reset(self):
         """reset parsing attributes to parse again"""
@@ -102,7 +102,7 @@ class HTMLParser(BaseHTMLParser):
 
     def handle_data(self, data: str):
         pass
-            
+
     def handle_entityref(self, name: str):
         pass
 

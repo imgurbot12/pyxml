@@ -6,10 +6,10 @@ from typing import List
 
 #** Variables **#
 __all__ = [
-    'find_charrefs', 
-    'find_entityrefs', 
-    'escape_cdata', 
-    'escape_attrib', 
+    'find_charrefs',
+    'find_entityrefs',
+    'escape_cdata',
+    'escape_attrib',
     'unescape'
 ]
 
