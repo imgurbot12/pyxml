@@ -5,11 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyxml3"
 version = "0.0.5"
-requires-python = ">=3.6"
-dependencies = [
-    "dataclasses>=0.8",
-    "typing_extensions>=4.12.2"
-]
+requires-python = ">=3.8"
+dependencies = []
 authors = [
     {name = "Andrew C Scott", email = "imgurbot12@gmail.com"},
 ]

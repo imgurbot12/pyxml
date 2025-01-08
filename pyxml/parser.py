@@ -6,9 +6,9 @@ import re
 from abc import abstractmethod
 from io import IOBase, BytesIO
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Set, Tuple, Type, Union
-from typing import BinaryIO
-from typing_extensions import Protocol
+from typing import (
+    BinaryIO, Dict, Iterator, List, Optional,
+    Protocol, Set, Tuple, Type, Union)
 
 from .lexer import DataStream, Token, Lexer, Result, BaseLexer
 from .builder import TreeBuilder

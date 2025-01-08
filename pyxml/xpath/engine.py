@@ -2,8 +2,8 @@
 XPATH Processing Engine
 """
 import re
-from typing import Any, Iterator, List, Optional, Sequence, Tuple
-from typing_extensions import Literal, overload
+from typing import (
+    Any, Iterator, List, Literal, Optional, Sequence, Tuple, overload)
 
 from .lexer import XToken, XLexer, EToken, ELexer
 from .functions import *

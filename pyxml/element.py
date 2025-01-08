@@ -2,7 +2,6 @@
 XML Element/Node Definitions
 """
 from typing import Dict, Generator, Optional, List, Iterator, Any, Tuple
-from typing_extensions import Self
 
 #** Variables **#
 __all__ = [
@@ -115,7 +114,7 @@ class Element:
         text:     Optional[str] = None,
         tail:     Optional[str] = None,
         children: Optional[List['Element']] = None,
-    ) -> Self:
+    ) -> 'Element':
         """customizable secondary init-func for element"""
         element = cls(tag, attrib)
         element.text     = text
@@ -164,7 +163,7 @@ class Element:
         """collect all text within elements matching xpath"""
         return xpath.findtext(self, path, default)
 
-    def xpath(self, path: str) -> List[Self]:
+    def xpath(self, path: str) -> List['Element']:
         """alias for findall for compatability with lxml"""
         return self.findall(path)
 
