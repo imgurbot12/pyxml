@@ -2,7 +2,7 @@
 XPath Expression/Filter Functions
 """
 from functools import wraps
-from typing import Callable, List, NamedTuple, Union
+from typing import Callable, List, NamedTuple, Union, cast
 
 from .lexer import EToken
 from ..element import Element
@@ -54,7 +54,7 @@ def wrap_expr(action: Result, expr: EvalExpr) -> ArgGetter:
 def compile_action(action: Result, args: List[ArgGetter]) -> EvalExpr:
     """build dynamic evaluation-expression given series of tokens"""
     # retrieve associated function
-    func = BUILTIN.get(action.token)
+    func = BUILTIN.get(cast(EToken, action.token))
     if action.token == EToken.FUNCTION and func is None:
         func = FUNCTIONS.get(action.value)
     if func is None:

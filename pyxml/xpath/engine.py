@@ -2,7 +2,8 @@
 XPATH Processing Engine
 """
 import re
-from typing import *
+from typing import Any, Iterator, List, Optional, Sequence, Tuple
+from typing_extensions import Literal, overload
 
 from .lexer import XToken, XLexer, EToken, ELexer
 from .functions import *
@@ -89,14 +90,17 @@ def compile_expr_func(expr: bytes, pure: bool = True) -> EvalExpr:
     return compiled
 
 @overload
-def iter_xpath(xpath: bytes, elems: Sequence[Element], pure: bool = True) -> Iterator[Element]:
+def iter_xpath(xpath: bytes,
+    elems: Sequence[Element], pure: Literal[True] = True) -> Iterator[Element]:
     ...
 
 @overload
-def iter_xpath(xpath: bytes, elems: Sequence[Element], pure: bool = False) -> Iterator[Any]:
+def iter_xpath(xpath: bytes,
+    elems: Sequence[Element], pure: Literal[False] = False) -> Iterator[Any]:
     ...
 
-def iter_xpath(xpath: bytes, elems: Sequence[Element], pure: bool = False) -> Iterator[Any]:
+def iter_xpath(xpath: bytes,
+    elems: Sequence[Element], pure: bool = False) -> Iterator[Any]:
     """
     iterate parse and evaluate xpath to find and filter elements
 

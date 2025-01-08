@@ -3,23 +3,24 @@ XPATH Search Syntax Lexer
 """
 import string
 from enum import IntEnum
+from typing import Optional
 
 from .._tokenize import *
 
 #** Variables **#
 __all__ = ['XToken', 'EToken', 'XLexer', 'ELexer']
 
-DOT   = ord('.')
-SLASH = ord('/')
-WILDCARD = ord('*')
-OPEN_BRACK = ord('[')
+DOT         = ord('.')
+SLASH       = ord('/')
+WILDCARD    = ord('*')
+OPEN_BRACK  = ord('[')
 CLOSE_BRACK = ord(']')
-OPEN_PAREN = ord('(')
+OPEN_PAREN  = ord('(')
 CLOSE_PAREN = ord(')')
-ATSYM = ord('@')
-COMMA = ord(',')
-EQUALS = ord('=')
-LESSTHAN = ord('<')
+ATSYM       = ord('@')
+COMMA       = ord(',')
+EQUALS      = ord('=')
+LESSTHAN    = ord('<')
 GREATERTHAN = ord('>')
 
 AND   = b'and'
@@ -198,8 +199,8 @@ class XLexer(BaseLexer):
 class ELexer(BaseLexer):
     """XPath Logic and Function Expression Lexer"""
 
-    def read_word(self, value: bytearray):
-        return super().read_word(value, ESPECIAL)
+    def read_word(self, value: bytearray, terminate: Optional[bytes] = None):
+        return super().read_word(value, terminate or ESPECIAL)
 
     def read_expression(self, value: bytearray):
         """

@@ -150,7 +150,7 @@ class ElementTree:
         write     = lambda s: f.write(s.encode(encoding))
         serialize = serialize_xml
         if not method or method == 'xml':
-            if xml_declaration:
+            if xml_declaration is not None:
                 write(xml_declaration)
             else:
                 write(f"<?xml version='1.0' encoding='{encoding}'?>\n")

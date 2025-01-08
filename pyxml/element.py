@@ -1,7 +1,7 @@
 """
 XML Element/Node Definitions
 """
-from typing import Dict, Optional, List, Iterator, Any, Tuple
+from typing import Dict, Generator, Optional, List, Iterator, Any, Tuple
 from typing_extensions import Self
 
 #** Variables **#
@@ -45,14 +45,14 @@ class Element:
         self.tag = tag
         self.attrib:   Dict[str, str]    = {**(attrib or {}), **extra}
         self.parent:   Optional[Element] = None
-        self.children: List[Self]        = []
+        self.children: List[Element]     = []
         self.text:     Optional[str]     = None
         self.tail:     Optional[str]     = None
 
     def __repr__(self) -> str:
         return 'Element(tag=%r, attrib=%r)' % (self.tag, self.attrib)
 
-    def __iter__(self) -> Iterator[Self]:
+    def __iter__(self) -> Iterator['Element']:
         return iter(self.children)
 
     def __len__(self) -> int:
@@ -61,30 +61,30 @@ class Element:
     def __bool__(self):
         raise NotImplementedError
 
-    def __getitem__(self, index: int) -> Self:
+    def __getitem__(self, index: int) -> 'Element':
         return self.children[index]
 
-    def __setitem__(self, index: int, element: Self):
+    def __setitem__(self, index: int, element: 'Element'):
         self.children[index] = element
 
     @classmethod
-    def makeelement(cls, tag, attrib) -> Self:
+    def makeelement(cls, tag, attrib) -> 'Element':
         """legacy support `makeelement` function"""
         return cls(tag, attrib)
 
-    def insert(self, index: int, element: Self):
+    def insert(self, index: int, element: 'Element'):
         self.children.insert(index, element)
 
-    def append(self, element: Self):
+    def append(self, element: 'Element'):
         self.children.append(element)
         element.parent = self
 
-    def extend(self, elements: Iterator[Self]):
+    def extend(self, elements: Iterator['Element']):
         self.children.extend(elements)
         for elem in elements:
             elem.parent = self
 
-    def remove(self, element: Self):
+    def remove(self, element: 'Element'):
         self.children.remove(element)
         element.parent = None
 
@@ -114,7 +114,7 @@ class Element:
         attrib:   Optional[Dict[str, str]] = None,
         text:     Optional[str] = None,
         tail:     Optional[str] = None,
-        children: Optional[List[Self]] = None,
+        children: Optional[List['Element']] = None,
     ) -> Self:
         """customizable secondary init-func for element"""
         element = cls(tag, attrib)
@@ -127,7 +127,7 @@ class Element:
         """prettify self for self and children to have uniform spacing"""
         prettify(self)
 
-    def iter(self, tag: Optional[bytes] = None) -> Iterator[Self]:
+    def iter(self, tag: Optional[bytes] = None) -> Iterator['Element']:
         """iterate all children recursively from parent"""
         if tag is None or tag == self.tag:
             yield self
@@ -168,11 +168,11 @@ class Element:
         """alias for findall for compatability with lxml"""
         return self.findall(path)
 
-    def getparent(self) -> Optional[Self]:
+    def getparent(self) -> Optional['Element']:
         """retrieve parent for compatability with lxml"""
         return self.parent
 
-    def getchildren(self) -> List[Self]:
+    def getchildren(self) -> List['Element']:
         """retrieve children for compatability with lxml"""
         return self.children
 
@@ -187,8 +187,8 @@ class _Special(Element):
     def __repr__(self) -> str:
         return f'{self._cname}(text={self.text})'
 
-    def itertext(self):
-        return
+    def itertext(self) -> Generator[str, None, None]:
+        yield from ()
 
 class Comment(_Special):
     pass

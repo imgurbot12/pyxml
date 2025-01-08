@@ -2,7 +2,7 @@
 HTML Parser Implementation (matching html.parser)
 """
 from io import BytesIO
-from typing import Dict
+from typing import Dict, Optional, Set
 
 from ..parser import Parser
 from ..builder import TreeBuilder
@@ -23,9 +23,9 @@ __all__ = [
 HTML_FULL = {'style', 'script'}
 
 #: list of empty html elements stolen from python stdlib
-HTML_EMPTY = {"area", "base", "basefont", "br", "col", "embed", "frame", "hr",
-              "img", "input", "isindex", "link", "meta", "param", "source",
-              "track", "wbr"}
+HTML_EMPTY = {'area', 'base', 'basefont', 'br', 'col', 'embed', 'frame', 'hr',
+              'img', 'input', 'isindex', 'link', 'meta', 'param', 'source',
+              'track', 'wbr'}
 
 #** Classes **#
 
@@ -49,15 +49,15 @@ class TreeMiddleware(TreeBuilder):
             return
         self.parser.unknown_decl(declaration)
 
-    def close(self):
+    def close(self) -> Element:
         """no validation checks on finish by default"""
-        pass
+        return self.parser.close()
 
 class BaseHTMLParser(Parser):
 
-    def parse_tag(self, tag: str):
+    def parse_tag(self, tag: str, empty: Optional[Set[str]] = None):
         """process tag w/ additional handling for empty tags"""
-        super().parse_tag(tag, HTML_EMPTY)
+        super().parse_tag(tag, empty or HTML_EMPTY)
 
 class HTMLParser(BaseHTMLParser):
     __slots__ = ('fix_broken', 'target', 'convert_charefs')

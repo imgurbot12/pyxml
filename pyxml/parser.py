@@ -5,9 +5,10 @@ import os
 import re
 from abc import abstractmethod
 from io import IOBase, BytesIO
-from dataclasses import InitVar, dataclass, field
-from typing import * #type: ignore
+from dataclasses import dataclass, field
+from typing import Dict, Iterator, List, Optional, Set, Tuple, Type, Union
 from typing import BinaryIO
+from typing_extensions import Protocol
 
 from .lexer import DataStream, Token, Lexer, Result, BaseLexer
 from .builder import TreeBuilder
